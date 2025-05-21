@@ -1,0 +1,634 @@
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+  color: #333;
+}
+
+/* Back button */
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #666;
+  margin-bottom: 2rem;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.backButton:hover {
+  color: #333;
+}
+
+/* Main layout */
+.fabricDetailGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  margin-bottom: 4rem;
+}
+
+@media (max-width: 768px) {
+  .fabricDetailGrid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+}
+
+/* Image section */
+.imageSection {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.mainImageContainer {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background-color: #fafafa;
+  cursor: pointer;
+  border: 1px solid #eee;
+}
+
+.mainImageContainer.zoomed {
+  cursor: zoom-out;
+}
+
+.mainImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.zoomed .mainImage {
+  transform: scale(var(--zoom-level, 2.5));
+  transform-origin: var(--zoom-x, 50%) var(--zoom-y, 50%);
+}
+
+.zoomButton {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+  background-color: rgba(255, 255, 255, 0.9);
+  border: 1px solid #eee;
+  border-radius: 50%;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  color: #666;
+}
+
+.zoomButton:hover {
+  background-color: #fff;
+  color: #333;
+}
+
+/* Color variants */
+.colorVariantsSection {
+  border-top: 1px solid #eee;
+  padding-top: 1.5rem;
+}
+
+.colorSectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.colorSectionTitle {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: #333;
+  margin: 0;
+}
+
+.colorCount {
+  font-weight: 400;
+  color: #666;
+}
+
+.showMoreButton {
+  background: none;
+  border: none;
+  color: #0066cc;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  padding: 0;
+}
+
+.showMoreButton:hover {
+  color: #004c99;
+  text-decoration: underline;
+}
+
+.colorVariantsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 1rem;
+}
+
+.colorVariantButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+}
+
+.colorVariantButton:hover {
+  background-color: #f5f5f5;
+  transform: translateY(-2px);
+}
+
+.selectedVariant {
+  background-color: #f5f5f5;
+  border: 1px solid #e0e0e0;
+}
+
+.colorVariantImageWrapper {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  border-radius: 0.25rem;
+  overflow: hidden;
+  border: 1px solid #eee;
+  transition: border-color 0.2s ease;
+}
+
+.selectedVariant .colorVariantImageWrapper {
+  border-color: #0066cc;
+}
+
+.colorVariantImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.selectedCheck {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: #0066cc;
+  color: white;
+  width: 1.25rem;
+  height: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0 0 0 0.25rem;
+}
+
+.colorVariantInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.colorVariantName {
+  font-size: 0.75rem;
+  color: #666;
+  text-align: left;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.colorSwatch {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  border: 1px solid #eee;
+  flex-shrink: 0;
+}
+
+/* Details section */
+.detailsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.fabricHeader {
+  margin-bottom: 0.5rem;
+}
+
+.fabricTitle {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 1rem 0;
+  line-height: 1.2;
+}
+
+.fabricMeta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.fabricCategory {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.categoryLabel {
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.categoryValue {
+  font-size: 0.875rem;
+  color: #0066cc;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.categoryValue:hover {
+  color: #004c99;
+  text-decoration: underline;
+}
+
+.fabricBadges {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.typeBadge,
+.availabilityBadge {
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.25rem 0.75rem;
+}
+
+.availabilityBadge {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  background-color: #f0f9f0;
+  color: #2e7d32;
+  border: 1px solid #e6f4e6;
+}
+
+.availabilityDot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background-color: #2e7d32;
+}
+
+/* Selected variant info */
+.selectedVariantInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 0;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+}
+
+.selectedColorInfo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.selectedColorSwatch {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.25rem;
+  border: 1px solid #eee;
+}
+
+.selectedColorDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.selectedColorTitle {
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: #666;
+  margin: 0;
+}
+
+.selectedColorName {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.stockInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.inStockDot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background-color: #2e7d32;
+}
+
+.inStockText {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #2e7d32;
+}
+
+/* Action buttons */
+.actionButtons {
+  display: flex;
+  gap: 1rem;
+}
+
+.cartButton,
+.favoriteButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0 1.5rem;
+  height: 3rem;
+  font-weight: 500;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  border-radius: 0.25rem;
+}
+
+.cartButton {
+  flex: 1;
+  background-color: #0066cc;
+  color: white;
+}
+
+.cartButton:hover {
+  background-color: #004c99;
+}
+
+.inCartButton {
+  background-color: #2e7d32;
+}
+
+.inCartButton:hover {
+  background-color: #1b5e20;
+}
+
+.favoriteButton {
+  background-color: white;
+  color: #666;
+  border: 1px solid #ddd;
+}
+
+.favoriteButton:hover {
+  background-color: #f5f5f5;
+  border-color: #ccc;
+}
+
+.inFavoritesButton {
+  color: #e91e63;
+  border-color: #e91e63;
+}
+
+.inFavoritesButton:hover {
+  background-color: rgba(233, 30, 99, 0.05);
+}
+
+.filledHeart {
+  color: #e91e63;
+}
+
+/* Success message */
+.successMessage {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background-color: #f0f9f0;
+  border: 1px solid #e6f4e6;
+  border-radius: 0.25rem;
+  color: #2e7d32;
+  font-size: 0.9375rem;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.successIcon {
+  color: #2e7d32;
+}
+
+/* Tabs */
+.infoTabs {
+  margin-top: 1rem;
+}
+
+.tabsList {
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #eee;
+}
+
+.tabContent {
+  padding: 0;
+  min-height: 200px;
+}
+
+.descriptionText {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: #444;
+  margin-top: 0;
+}
+
+.applicationAreas {
+  margin-top: 1.5rem;
+}
+
+.applicationAreasTitle {
+  font-size: 1.125rem;
+  font-weight: 500;
+  margin: 0 0 1rem 0;
+  color: #333;
+}
+
+.applicationAreasList {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+  margin: 0;
+}
+
+.applicationArea {
+  margin-bottom: 0.75rem;
+  line-height: 1.5;
+  color: #444;
+}
+
+/* Specifications table styling */
+.specificationsTable {
+  display: flex;
+  flex-direction: column;
+}
+
+.specificationRow {
+  display: flex;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #eee;
+}
+
+.specificationKey {
+  flex: 0 0 40%;
+  font-weight: 500;
+  color: #666;
+}
+
+.specificationValue {
+  flex: 0 0 60%;
+  color: #333;
+}
+
+.noSpecifications,
+.noCareInstructions {
+  color: #666;
+  font-style: italic;
+}
+
+/* Care instructions styling */
+.careInstructionsList {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+  margin: 0;
+}
+
+.careInstruction {
+  margin-bottom: 0.75rem;
+  line-height: 1.5;
+  color: #444;
+}
+
+.careInstructionsDefault {
+  padding: 0;
+}
+
+/* Request sample section */
+.requestSampleSection {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  text-align: center;
+}
+
+.requestSampleButton {
+  background-color: white;
+  color: #0066cc;
+  border: 1px solid #0066cc;
+  font-weight: 500;
+  padding: 0 1.5rem;
+  height: 2.75rem;
+  transition: all 0.2s ease;
+  border-radius: 0.25rem;
+}
+
+.requestSampleButton:hover {
+  background-color: #f5f9ff;
+}
+
+.requestSampleInfo {
+  font-size: 0.875rem;
+  color: #666;
+  margin: 0;
+}
+
+/* Similar fabrics section styling */
+.similarFabricsSection {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid #eee;
+}
+
+.similarFabricsTitle {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 2rem 0;
+}
+
+.similarFabricsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 2rem;
+}
+
+@media (max-width: 640px) {
+  .fabricTitle {
+    font-size: 1.5rem;
+  }
+
+  .actionButtons {
+    flex-direction: column;
+  }
+
+  .colorVariantsGrid {
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  }
+
+  .similarFabricsGrid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+
+  .container {
+    padding: 1.5rem 1rem 3rem;
+  }
+
+  .selectedVariantInfo {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .fabricTitle {
+    font-size: 1.75rem;
+  }
+
+  .similarFabricsGrid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  }
+}
