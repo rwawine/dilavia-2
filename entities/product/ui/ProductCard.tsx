@@ -7,7 +7,6 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useCart } from "@/entities/cart/model/cartContext"
 import { useFavorites } from "@/entities/favorites/model/favoritesContext"
-import { useRecentlyViewed } from "@/entities/recently-viewed/model/recentlyViewedContext"
 import { formatPrice } from "@/shared/utils/formatPrice"
 import type { ProductData, BedData, SofaData, KidsBedData, Size } from "@/shared/api/types"
 import styles from "./ProductCard.module.css"
@@ -22,7 +21,6 @@ export default function ProductCard({ product, showOptions = false, className = 
   const router = useRouter()
   const { state: cartState, dispatch: cartDispatch } = useCart()
   const { state: favoritesState, dispatch: favoritesDispatch } = useFavorites()
-  const { state: recentlyViewedState, dispatch: recentlyViewedDispatch } = useRecentlyViewed()
 
   // State for product options
   const [selectedSize, setSelectedSize] = useState(0)
@@ -191,15 +189,7 @@ export default function ProductCard({ product, showOptions = false, className = 
   }
 
   const handleProductClick = () => {
-    // Add to recently viewed
-    recentlyViewedDispatch({
-      type: "ADD_VIEWED_PRODUCT",
-      payload: {
-        id: product.id,
-        product,
-        timestamp: Date.now(),
-      },
-    })
+    // No need to add to recently viewed anymore
   }
 
   // Toggle size selector

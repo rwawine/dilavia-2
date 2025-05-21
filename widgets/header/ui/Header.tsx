@@ -162,17 +162,14 @@ export const Header = () => {
                   {isCatalogOpen && (
                     <div className={styles.catalogDropdown} ref={catalogRef}>
                       {catalogCategories.map((category) => (
-                        <Link
+                        <a
                           key={category.path}
                           href={category.path}
                           className={styles.categoryLink}
-                          onClick={() => {
-                            setIsCatalogOpen(false);
-                            setIsMenuOpen(false);
-                          }}
+                          onClick={() => setIsCatalogOpen(false)}
                         >
                           {category.name}
-                        </Link>
+                        </a>
                       ))}
                     </div>
                   )}
@@ -295,14 +292,14 @@ export const Header = () => {
                 {isCatalogOpen && (
                   <div className={styles.catalogDropdown} ref={catalogRef}>
                     {catalogCategories.map((category) => (
-                      <Link
+                      <a
                         key={category.path}
                         href={category.path}
                         className={styles.categoryLink}
                         onClick={() => setIsCatalogOpen(false)}
                       >
                         {category.name}
-                      </Link>
+                      </a>
                     ))}
                   </div>
                 )}

@@ -1,21 +1,21 @@
 import type React from "react"
-import type { Metadata } from "next/types"
+import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import Header from "@/widgets/header/ui/Header"
 import Footer from "@/widgets/footer/ui/Footer"
 import { CartProvider } from "@/entities/cart/model/cartContext"
 import { FavoritesProvider } from "@/entities/favorites/model/favoritesContext"
-import { RecentlyViewedProvider } from "@/entities/recently-viewed/model/recentlyViewedContext"
 import { FabricCartProvider } from "@/entities/fabric-cart/model/fabricCartContext"
 import { FabricFavoritesProvider } from "@/entities/fabric-favorites/model/fabricFavoritesContext"
+import { ThemeProvider } from "@/components/theme-provider"
+import { Toaster } from "@/components/ui/toaster"
 import "./globals.css"
 
 const inter = Inter({ subsets: ["latin", "cyrillic"] })
 
 export const metadata: Metadata = {
-  title: "Dilavia - Мебель и ткани",
-  description: "Магазин качественной мебели и тканей для вашего дома",
-    generator: 'v0.dev'
+  title: "Dilavia - Мебельный магазин",
+  description: "Купить мебель в Москве с доставкой",
 }
 
 export default function RootLayout({
@@ -24,11 +24,16 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="ru">
+    <html lang="ru" className="light" style={{ colorScheme: "light" }}>
       <body className={inter.className}>
-        <CartProvider>
-          <FavoritesProvider>
-            <RecentlyViewedProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <CartProvider>
+            <FavoritesProvider>
               <FabricCartProvider>
                 <FabricFavoritesProvider>
                   <div className="wrapper">
@@ -38,9 +43,10 @@ export default function RootLayout({
                   </div>
                 </FabricFavoritesProvider>
               </FabricCartProvider>
-            </RecentlyViewedProvider>
-          </FavoritesProvider>
-        </CartProvider>
+            </FavoritesProvider>
+          </CartProvider>
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   )

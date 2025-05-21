@@ -9,7 +9,6 @@ import { Button } from "@/shared/ui/button/Button"
 import { formatPrice } from "@/shared/utils/formatPrice"
 import { useCart } from "@/entities/cart/model/cartContext"
 import { useFavorites } from "@/entities/favorites/model/favoritesContext"
-import { useRecentlyViewed } from "@/entities/recently-viewed/model/recentlyViewedContext"
 import SimilarProducts from "@/widgets/similar-products/ui/SimilarProducts"
 import styles from "./ProductDetail.module.css"
 
@@ -58,7 +57,6 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProduc
   // Context hooks
   const { state: cartState, dispatch: cartDispatch } = useCart()
   const { state: favoritesState, dispatch: favoritesDispatch } = useFavorites()
-  const { state: recentlyViewedState, dispatch: recentlyViewedDispatch } = useRecentlyViewed()
 
   // Determine product type
   const isSofa = product.category === "sofa"
@@ -413,11 +411,6 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProduc
   }
 
   const dimensions = getDimensions()
-
-  // Добавляем товар в недавно просмотренные при загрузке компонента
-  React.useEffect(() => {
-    recentlyViewedDispatch({ type: "ADD_TO_RECENTLY_VIEWED", payload: product })
-  }, [product, recentlyViewedDispatch])
 
   if (!product) {
     return <div className={styles.loading}>Загрузка...</div>

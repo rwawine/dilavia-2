@@ -1,6 +1,5 @@
 .popularProducts {
   padding: var(--spacing-2xl) 0;
-  background-color: var(--background-secondary);
 }
 
 .sectionHeader {
@@ -95,6 +94,7 @@
 
 /* Custom Pagination */
 .customPagination {
+  opacity: 0;
   position: absolute;
   bottom: 0;
   left: 0;

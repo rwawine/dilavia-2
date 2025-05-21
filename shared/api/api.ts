@@ -1,5 +1,6 @@
 import type { Category, Fabric, FabricCategory, FabricCollection } from "./types"
 import type { ProductData, KidsBedData } from "./types"
+import axios from "axios"
 
 const API_BASE_URL = "https://66d77b122c6b09c7.mokky.dev"
 
@@ -816,5 +817,16 @@ export async function getAvailableFilters(): Promise<{
     return {
       colors: [],
     }
+  }
+}
+
+export async function getProductCountsByCategory(): Promise<{ [key: string]: number }> {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/products/counts`)
+    return response.data
+  } catch (error) {
+    console.error('Error fetching product counts:', error)
+    // Возвращаем пустой объект в случае ошибки
+    return {}
   }
 }

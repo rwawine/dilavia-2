@@ -1,132 +1,89 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import Link from "next/link"
+import { Swiper, SwiperSlide } from "swiper/react"
+import { Pagination, Autoplay } from "swiper/modules"
 import Button from "@/shared/ui/button/Button"
 import styles from "./HeroSection.module.css"
+import cn from 'classnames'
+
+// Import Swiper styles
+import "swiper/css"
+import "swiper/css/pagination"
 
 export const HeroSection = () => {
-  const [currentSlide, setCurrentSlide] = useState(0)
-  const [isPaused, setIsPaused] = useState(false)
-
+  const [isInitialized, setIsInitialized] = useState(false)
+  
   const heroSlides = [
     {
-      title: "Создайте уютный дом с нашей мебелью",
-      description:
-        "Широкий выбор качественной мебели для вашего дома. Диваны, кровати и другая мебель с доставкой по всей Беларуси.",
-      image: "/modern-living-room.png",
-      buttonText: "Перейти в каталог",
-      buttonLink: "/catalog",
+      title: "NINJA PIZZA",
+      subtitle: "ПЕПЕРОНІ В МЕНЮ",
+      description: "Спробуйте нашу фірмову піцу з пепероні",
+      image: "/images/banners/pizza-banner.jpg",
+      buttonText: "Замовити",
+      buttonLink: "/menu/pizza",
     },
     {
-      title: "Специальное предложение на диваны",
-      description:
-        "Скидка до 15% на все диваны при заказе до конца месяца. Используйте промокод ДИВАН15 при оформлении заказа.",
-      image: "/sofa-promo.png",
-      buttonText: "Смотреть диваны",
-      buttonLink: "/catalog?category=sofa",
-    },
-    {
-      title: "Новая коллекция кроватей",
-      description: "Встречайте новую коллекцию кроватей с ортопедическими матрасами для здорового сна и отдыха.",
-      image: "/bed-collection.png",
-      buttonText: "Смотреть кровати",
-      buttonLink: "/catalog?category=bed",
-    },
+      title: "ВИБІР NINJA",
+      subtitle: "ГРОМОВЕРЖЦІ",
+      description: "Дивіться новий фільм від Marvel Studios вже у кіно",
+      image: "/images/banners/thunderbolts-banner.jpg",
+      buttonText: "Купити квитки",
+      buttonLink: "/movies/thunderbolts",
+    }
   ]
 
-  // Auto-slide functionality
-  useEffect(() => {
-    if (isPaused) return
-
-    const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev === heroSlides.length - 1 ? 0 : prev + 1))
-    }, 6000)
-
-    return () => clearInterval(interval)
-  }, [isPaused, heroSlides.length])
-
-  const handleSlideChange = (index: number) => {
-    setCurrentSlide(index)
-  }
-
-  const nextSlide = () => {
-    setCurrentSlide((prev) => (prev === heroSlides.length - 1 ? 0 : prev + 1))
-  }
-
-  const prevSlide = () => {
-    setCurrentSlide((prev) => (prev === 0 ? heroSlides.length - 1 : prev - 1))
-  }
-
   return (
-    <section
-      className={styles.heroSection}
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
-    >
-      <div className={styles.sliderContainer}>
-        <div className={styles.sliderTrack} style={{ transform: `translateX(-${currentSlide * 100}%)` }}>
-          {heroSlides.map((slide, index) => (
-            <div key={index} className={styles.slide}>
-              <div className={styles.slideBackground} style={{ backgroundImage: `url(${slide.image})` }}></div>
-              <div className="container">
-                <div className={styles.content}>
+    <section className={styles.heroSection}>
+      <Swiper
+        modules={[Pagination, Autoplay]}
+        slidesPerView={1}
+        spaceBetween={20}
+        speed={800}
+        initialSlide={0}
+        observeParents={true}
+        autoplay={{
+          delay: 5000,
+          disableOnInteraction: false,
+          pauseOnMouseEnter: true,
+        }}
+        pagination={{
+          clickable: true,
+          dynamicBullets: true,
+          dynamicMainBullets: 3,
+        }}
+        onInit={() => setIsInitialized(true)}
+        className={cn(styles.sliderContainer, {
+          [styles.initialized]: isInitialized
+        })}
+      >
+        {heroSlides.map((slide, index) => (
+          <SwiperSlide key={index} className={styles.slideWrapper}>
+            <div className={styles.slide}>
+              <div 
+                className={styles.slideBackground} 
+                style={{ backgroundImage: `url(${slide.image})` }}
+              />
+              <div className={styles.overlay} />
+              <div className={styles.content}>
+                <div className={styles.titleWrapper}>
+                  <h2 className={styles.subtitle}>{slide.subtitle}</h2>
                   <h1 className={styles.title}>{slide.title}</h1>
-                  <p className={styles.description}>{slide.description}</p>
-                  <div className={styles.actions}>
-                    <Link href={slide.buttonLink}>
-                      <Button size="lg">{slide.buttonText}</Button>
-                    </Link>
-                  </div>
+                </div>
+                <p className={styles.description}>{slide.description}</p>
+                <div className={styles.actions}>
+                  <Link href={slide.buttonLink}>
+                    <Button variant="primary" size="lg">
+                      {slide.buttonText}
+                    </Button>
+                  </Link>
                 </div>
               </div>
             </div>
-          ))}
-        </div>
-
-        <button
-          className={`${styles.sliderButton} ${styles.prevButton}`}
-          onClick={prevSlide}
-          aria-label="Предыдущий слайд"
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path
-              d="M15 18L9 12L15 6"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
-
-        <button
-          className={`${styles.sliderButton} ${styles.nextButton}`}
-          onClick={nextSlide}
-          aria-label="Следующий слайд"
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path
-              d="M9 6L15 12L9 18"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
-
-        <div className={styles.sliderDots}>
-          {heroSlides.map((_, index) => (
-            <button
-              key={index}
-              className={`${styles.sliderDot} ${currentSlide === index ? styles.active : ""}`}
-              onClick={() => handleSlideChange(index)}
-              aria-label={`Перейти к слайду ${index + 1}`}
-            />
-          ))}
-        </div>
-      </div>
+          </SwiperSlide>
+        ))}
+      </Swiper>
     </section>
   )
 }
