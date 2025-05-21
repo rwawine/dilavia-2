@@ -278,9 +278,6 @@ export default function ProductCard({ product, showOptions = false, className = 
         <Link href={getProductUrl()} onClick={handleProductClick} className={styles.productLink}>
           <h3 className={styles.productName}>{product.name}</h3>
         </Link>
-        <div className={styles.productMeta}>
-          {product.category === "kids" && <span className={styles.category}>Детская кровать</span>}
-        </div>
         <div className={styles.priceContainer}>
           <span className={styles.price}>{formatPrice(getPrice())} ₽</span>
           {product.price.old && <span className={styles.oldPrice}>{formatPrice(product.price.old)} ₽</span>}

@@ -117,12 +117,6 @@
   text-overflow: ellipsis;
 }
 
-.productMeta {
-  display: flex;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
 .category {
   font-size: 0.75rem;
   color: #757575;

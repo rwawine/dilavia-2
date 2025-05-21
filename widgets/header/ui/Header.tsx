@@ -8,14 +8,24 @@ import { useFabricCart } from "@/entities/fabric-cart/model/fabricCartContext"
 import { useFabricFavorites } from "@/entities/fabric-favorites/model/fabricFavoritesContext"
 import styles from "./Header.module.css"
 
+const catalogCategories = [
+  { name: "Все товары", path: "/catalog" },
+  { name: "Диваны", path: "/catalog?category=sofa" },
+  { name: "Кровати", path: "/catalog?category=bed" },
+  { name: "Кресла", path: "/catalog?category=armchair" },
+  { name: "Детские кровати", path: "/catalog?category=kids" },
+];
+
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isCatalogOpen, setIsCatalogOpen] = useState(false)
   const { state: cartState } = useCart()
   const { state: favoritesState } = useFavorites()
   const { state: fabricCartState } = useFabricCart()
   const { state: fabricFavoritesState } = useFabricFavorites()
   const menuRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
+  const catalogRef = useRef<HTMLDivElement>(null)
 
   // Вычисляем общее количество товаров в корзине (мебель + ткани)
   const totalCartItems = cartState.totalItems + fabricCartState.totalItems
@@ -25,6 +35,10 @@ export const Header = () => {
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
+  }
+
+  const toggleCatalog = () => {
+    setIsCatalogOpen(!isCatalogOpen)
   }
 
   // Close menu when clicking outside
@@ -39,13 +53,21 @@ export const Header = () => {
       ) {
         setIsMenuOpen(false)
       }
+
+      if (
+        isCatalogOpen &&
+        catalogRef.current &&
+        !catalogRef.current.contains(event.target as Node)
+      ) {
+        setIsCatalogOpen(false)
+      }
     }
 
     document.addEventListener("mousedown", handleClickOutside)
     return () => {
       document.removeEventListener("mousedown", handleClickOutside)
     }
-  }, [isMenuOpen])
+  }, [isMenuOpen, isCatalogOpen])
 
   // Prevent body scroll when menu is open
   useEffect(() => {
@@ -81,7 +103,6 @@ export const Header = () => {
           ref={menuRef}
           className={`${styles.mobileMenuOverlay} ${isMenuOpen ? styles.active : ""}`}
           onClick={(e) => {
-            // Close menu only if clicking the overlay, not the menu content
             if (e.target === menuRef.current) {
               setIsMenuOpen(false)
             }
@@ -114,23 +135,52 @@ export const Header = () => {
 
             <ul className={styles.navList}>
               <li className={styles.navItem}>
-                <Link href="/catalog" className={styles.navLink} onClick={() => setIsMenuOpen(false)}>
-                  Каталог
-                </Link>
+                <div className={styles.catalogWrapper}>
+                  <button 
+                    className={`${styles.catalogButton} ${isCatalogOpen ? styles.active : ''}`}
+                    onClick={toggleCatalog}
+                    aria-expanded={isCatalogOpen}
+                  >
+                    Каталог
+                    <svg 
+                      className={styles.catalogArrow} 
+                      width="12" 
+                      height="12" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path 
+                        d="M6 9l6 6 6-6" 
+                        stroke="currentColor" 
+                        strokeWidth="2" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                  {isCatalogOpen && (
+                    <div className={styles.catalogDropdown} ref={catalogRef}>
+                      {catalogCategories.map((category) => (
+                        <Link
+                          key={category.path}
+                          href={category.path}
+                          className={styles.categoryLink}
+                          onClick={() => {
+                            setIsCatalogOpen(false);
+                            setIsMenuOpen(false);
+                          }}
+                        >
+                          {category.name}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </li>
               <li className={styles.navItem}>
                 <Link href="/fabrics" className={styles.navLink} onClick={() => setIsMenuOpen(false)}>
                   Ткани
-                </Link>
-              </li>
-              <li className={styles.navItem}>
-                <Link href="/catalog?category=sofa" className={styles.navLink} onClick={() => setIsMenuOpen(false)}>
-                  Диваны
-                </Link>
-              </li>
-              <li className={styles.navItem}>
-                <Link href="/catalog?category=bed" className={styles.navLink} onClick={() => setIsMenuOpen(false)}>
-                  Кровати
                 </Link>
               </li>
               <li className={styles.navItem}>
@@ -146,6 +196,11 @@ export const Header = () => {
               <li className={styles.navItem}>
                 <Link href="/delivery" className={styles.navLink} onClick={() => setIsMenuOpen(false)}>
                   Доставка и оплата
+                </Link>
+              </li>
+              <li className={styles.navItem}>
+                <Link href="/reviews" className={styles.navLink} onClick={() => setIsMenuOpen(false)}>
+                  Отзывы
                 </Link>
               </li>
             </ul>
@@ -213,9 +268,45 @@ export const Header = () => {
         <nav className={styles.desktopNav}>
           <ul className={styles.navList}>
             <li className={styles.navItem}>
-              <Link href="/catalog" className={styles.navLink}>
-                Каталог
-              </Link>
+              <div className={styles.catalogWrapper}>
+                <button 
+                  className={`${styles.catalogButton} ${isCatalogOpen ? styles.active : ''}`}
+                  onClick={toggleCatalog}
+                  aria-expanded={isCatalogOpen}
+                >
+                  Каталог
+                  <svg 
+                    className={styles.catalogArrow} 
+                    width="12" 
+                    height="12" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path 
+                      d="M6 9l6 6 6-6" 
+                      stroke="currentColor" 
+                      strokeWidth="2" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
+                {isCatalogOpen && (
+                  <div className={styles.catalogDropdown} ref={catalogRef}>
+                    {catalogCategories.map((category) => (
+                      <Link
+                        key={category.path}
+                        href={category.path}
+                        className={styles.categoryLink}
+                        onClick={() => setIsCatalogOpen(false)}
+                      >
+                        {category.name}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
             </li>
             <li className={styles.navItem}>
               <Link href="/fabrics" className={styles.navLink}>
@@ -235,6 +326,11 @@ export const Header = () => {
             <li className={styles.navItem}>
               <Link href="/delivery" className={styles.navLink}>
                 Доставка и оплата
+              </Link>
+            </li>
+            <li className={styles.navItem}>
+              <Link href="/reviews" className={styles.navLink}>
+                Отзывы
               </Link>
             </li>
           </ul>
