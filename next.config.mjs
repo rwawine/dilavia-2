@@ -15,6 +15,10 @@ const nextConfig = {
         source: "/fabrics/:path*/images/:rest*",
         destination: "/images/:rest*",
       },
+      {
+        source: "/products/:path*/images/:rest*",
+        destination: "/images/:rest*",
+      },
     ]
   },
 }

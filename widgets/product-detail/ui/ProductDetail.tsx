@@ -620,11 +620,6 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProduc
               </button>
             </div>
 
-            <div className={styles.description}>
-              <h3 className={styles.descriptionTitle}>Описание</h3>
-              <p className={styles.descriptionText}>{product.description}</p>
-            </div>
-
             {product.characteristics && (
               <div className={styles.characteristics}>
                 <h3 className={styles.characteristicsTitle}>Характеристики</h3>
