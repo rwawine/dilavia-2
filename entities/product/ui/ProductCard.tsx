@@ -31,19 +31,6 @@ export default function ProductCard({ product, showOptions = false, className = 
   const isInFavorites = favoritesState.items.some((item) => item.id === product.id)
   const [isFavorited, setIsFavorited] = useState(isInFavorites)
 
-  // Generate a unique ID for this product configuration
-  const getCartItemId = () => {
-    return `${product.id}-${selectedSize}-${withMechanism}`
-  }
-
-  // Check if product is in cart
-  const isInCart = cartState.items.some((item) => item.id === getCartItemId())
-
-  // Update favorite state when context changes
-  useEffect(() => {
-    setIsFavorited(favoritesState.items.some((item) => item.id === product.id))
-  }, [favoritesState, product.id])
-
   // Get sizes based on product type
   const getSizes = () => {
     const isSofa = product.category === "sofa"
@@ -113,6 +100,21 @@ export default function ProductCard({ product, showOptions = false, className = 
     }
     return false
   }
+
+  // Generate a unique ID for this product configuration
+  const getCartItemId = () => {
+    const size = sizes[selectedSize]
+    const mechanismSuffix = hasLiftingMechanism() ? `-${withMechanism ? 'with-mechanism' : 'no-mechanism'}` : ''
+    return `${product.id}-${size?.width}x${size?.length}${mechanismSuffix}`
+  }
+
+  // Check if product is in cart
+  const isInCart = cartState.items.some((item) => item.id === getCartItemId())
+
+  // Update favorite state when context changes
+  useEffect(() => {
+    setIsFavorited(favoritesState.items.some((item) => item.id === product.id))
+  }, [favoritesState, product.id])
 
   // Get price with selected options
   const getPrice = () => {

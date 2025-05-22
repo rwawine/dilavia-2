@@ -1,6 +1,8 @@
 "use client"
 
 import type React from "react"
+import type { BedData, SofaData, SizeWithMechanism, Size } from "@/shared/api/types"
+import type { CartItem } from "@/entities/cart/model/types"
 
 import { useEffect, useState, useCallback } from "react"
 import Image from "next/image"
@@ -42,6 +44,11 @@ const SOCIAL_MEDIA = [
   { id: "whatsapp", name: "WhatsApp" },
   { id: "vk", name: "ВКонтакте" },
 ]
+
+// Type guard for freeShipping
+function hasFreeShipping(promo: any): promo is { freeShipping: boolean } {
+  return typeof promo === "object" && promo !== null && "freeShipping" in promo
+}
 
 export default function CartPage() {
   const router = useRouter()
@@ -154,7 +161,9 @@ export default function CartPage() {
       setPromoSuccess(`Промокод ${normalizedCode} успешно применен!`)
 
       // Apply free shipping if applicable
-      if (PROMO_CODES[normalizedCode as keyof typeof PROMO_CODES].freeShipping) {
+      const promo = PROMO_CODES[normalizedCode as keyof typeof PROMO_CODES]
+      const isFreeShipping = hasFreeShipping(promo) && promo.freeShipping
+      if (isFreeShipping) {
         setShippingCost(0)
       }
     } else {
@@ -263,10 +272,12 @@ export default function CartPage() {
   // Calculate final total
   const getFinalTotal = useCallback(() => {
     const discount = getDiscountAmount()
+    const appliedPromoObj = appliedPromo ? PROMO_CODES[appliedPromo as keyof typeof PROMO_CODES] : null
+    const isAppliedFreeShipping = appliedPromoObj && hasFreeShipping(appliedPromoObj) && appliedPromoObj.freeShipping
     return (
       totalCartPrice -
       discount +
-      (appliedPromo && PROMO_CODES[appliedPromo as keyof typeof PROMO_CODES].freeShipping ? 0 : shippingCost)
+      (appliedPromo && isAppliedFreeShipping ? 0 : shippingCost)
     )
   }, [appliedPromo, totalCartPrice, shippingCost, getDiscountAmount])
 
@@ -276,6 +287,31 @@ export default function CartPage() {
 
   const handleCloseImage = () => {
     setSelectedImage(null)
+  }
+
+  const getSizeInfo = (item: CartItem) => {
+    const isBed = item.product.category === "bed"
+    const isSofa = item.product.category === "sofa"
+    const isKidsBed = item.product.category === "kids"
+
+    let sizeInfo = null
+    let bedSizeWithMechanism = null
+    let hasMechanismOption = false
+
+    if (isBed && "bed" in item.product) {
+      const bedSizes = (item.product as BedData).bed as SizeWithMechanism[]
+      sizeInfo = item.selectedSize
+      bedSizeWithMechanism = item.selectedSize as SizeWithMechanism
+      hasMechanismOption = bedSizeWithMechanism?.lifting_mechanism?.length > 0
+    } else if (isSofa && "sizes" in item.product) {
+      const sofaSizes = (item.product as SofaData).sizes?.sofa as Size[]
+      sizeInfo = item.selectedSize
+    }
+
+    const sizeText = sizeInfo ? `Размеры: ${sizeInfo.width}x${sizeInfo.length} см` : ""
+    const mechanismText = item.withMechanism ? "С подъемным механизмом" : ""
+
+    return { sizeText, mechanismText }
   }
 
   if (!isClient) {
@@ -311,6 +347,9 @@ export default function CartPage() {
       </div>
     )
   }
+
+  const appliedPromoObj = appliedPromo ? PROMO_CODES[appliedPromo as keyof typeof PROMO_CODES] : null
+  const isAppliedFreeShipping = appliedPromoObj && hasFreeShipping(appliedPromoObj) && appliedPromoObj.freeShipping
 
   return (
     <div className="container">
@@ -514,15 +553,24 @@ export default function CartPage() {
               {furnitureItems.length > 0 && (
                 <>
                   <div className={styles.summaryCategory}>Мебель:</div>
-                  {furnitureItems.map((item) => (
-                    <div key={item.id} className={styles.summaryItem}>
-                      <div className={styles.summaryItemInfo}>
-                        <span className={styles.summaryItemName}>{item.product.name}</span>
-                        <span className={styles.summaryItemQuantity}>x{item.quantity}</span>
+                  {furnitureItems.map((item) => {
+                    const { sizeText, mechanismText } = getSizeInfo(item)
+                    const productUrl = `/products/${item.product.category}/${item.product.slug}`
+
+                    return (
+                      <div key={item.id} className={styles.summaryItem}>
+                        <div className={styles.summaryItemInfo}>
+                          <span className={styles.summaryItemName}>{item.product.name}</span>
+                          <span className={styles.summaryItemQuantity}>x{item.quantity}</span>
+                        </div>
+                        <div className={styles.itemOptions}>
+                          {sizeText && <span className={styles.itemOption}>{sizeText}</span>}
+                          {mechanismText && <span className={styles.itemOption}>{mechanismText}</span>}
+                        </div>
+                        <span className={styles.summaryItemPrice}>{item.totalPrice} руб.</span>
                       </div>
-                      <span className={styles.summaryItemPrice}>{item.totalPrice} руб.</span>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </>
               )}
 
@@ -559,7 +607,7 @@ export default function CartPage() {
               <div className={styles.summaryRow}>
                 <span>Доставка:</span>
                 <span>
-                  {appliedPromo && PROMO_CODES[appliedPromo as keyof typeof PROMO_CODES].freeShipping ? (
+                  {appliedPromo && isAppliedFreeShipping ? (
                     <span className={styles.freeShipping}>Бесплатно</span>
                   ) : (
                     `${shippingCost} руб.`
@@ -610,24 +658,8 @@ export default function CartPage() {
                   <>
                     <div className={styles.cartCategoryTitle}>Мебель</div>
                     {furnitureItems.map((item) => {
-                      const isBed = "bed" in item.product
-                      const category = isBed ? "bed" : "sofa"
-                      const productUrl = `/products/${category}/${item.product.slug}`
-
-                      // Get size info
-                      const sizeInfo = isBed
-                        ? item.product.bed[item.selectedSize || 0]
-                        : "sizes" in item.product
-                          ? item.product.sizes.sofa[item.selectedSize || 0]
-                          : null
-
-                      const sizeText = sizeInfo ? `${sizeInfo.width}x${sizeInfo.length} см` : ""
-
-                      // Get mechanism info for beds
-                      const mechanismText =
-                        isBed && item.withMechanism && item.selectedSize !== null
-                          ? `, с подъемным механизмом (+${item.product.bed[item.selectedSize].lifting_mechanism[1].price} руб.)`
-                          : ""
+                      const { sizeText, mechanismText } = getSizeInfo(item)
+                      const productUrl = `/products/${item.product.category}/${item.product.slug}`
 
                       return (
                         <div key={item.id} className={styles.cartItem}>
@@ -647,8 +679,8 @@ export default function CartPage() {
                               {item.product.name}
                             </Link>
                             <div className={styles.itemOptions}>
-                              {sizeText}
-                              {mechanismText}
+                              {sizeText && <span className={styles.itemOption}>{sizeText}</span>}
+                              {mechanismText && <span className={styles.itemOption}>{mechanismText}</span>}
                             </div>
                           </div>
                           <div className={styles.itemQuantity}>
@@ -708,7 +740,6 @@ export default function CartPage() {
                   <>
                     <div className={styles.cartCategoryTitle}>Ткани (дополнительно)</div>
                     {fabricItems.map((item) => {
-                      // Create URL for fabric detail page
                       const fabricUrl = `/fabrics/${item.categoryName}/${item.collectionName}`
 
                       return (
@@ -726,12 +757,15 @@ export default function CartPage() {
                             <Link href={fabricUrl} className={styles.itemName}>
                               {item.collectionNameRu} - {item.variant.color.ru}
                             </Link>
-                            <div className={styles.itemOptions}>Категория: {item.categoryNameRu}</div>
+                            <div className={styles.itemOptions}>
+                              <span className={styles.itemOption}>Категория: {item.categoryNameRu}</span>
+                            </div>
                           </div>
                           <div className={styles.itemQuantity}>
                             <button
                               className={styles.quantityButton}
                               onClick={() => handleUpdateFabricQuantity(item.id, Math.max(1, item.quantity - 1))}
+                              disabled={item.quantity <= 1}
                             >
                               -
                             </button>
@@ -749,30 +783,9 @@ export default function CartPage() {
                           <button
                             className={styles.removeButton}
                             onClick={() => handleRemoveFabricItem(item.id)}
-                            aria-label="Удалить товар"
+                            aria-label="Удалить ткань"
                           >
-                            <svg
-                              width="20"
-                              height="20"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <path
-                                d="M18 6L6 18"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                              <path
-                                d="M6 6L18 18"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
+                            ×
                           </button>
                         </div>
                       )
@@ -855,7 +868,7 @@ export default function CartPage() {
               <div className={styles.summaryRow}>
                 <span className={styles.summaryLabel}>Доставка:</span>
                 <span className={styles.summaryValue}>
-                  {appliedPromo && PROMO_CODES[appliedPromo as keyof typeof PROMO_CODES].freeShipping ? (
+                  {appliedPromo && isAppliedFreeShipping ? (
                     <span className={styles.freeShipping}>Бесплатно</span>
                   ) : (
                     `${shippingCost} руб.`

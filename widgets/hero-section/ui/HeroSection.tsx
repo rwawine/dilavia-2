@@ -30,7 +30,7 @@ export const HeroSection = () => {
       description: "Подойдет для любого интерьера",
       image: "/assorted-living-room-furniture.png",
       buttonText: "Перейти в каталог",
-      buttonLink: "/catalog&category=sofa",
+      buttonLink: "/catalog?category=sofa",
     }
   ]
 

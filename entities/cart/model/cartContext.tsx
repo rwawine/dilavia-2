@@ -23,8 +23,9 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       const existingItemIndex = state.items.findIndex(
         (item) =>
           item.id === action.payload.id &&
-          item.selectedSize === action.payload.selectedSize &&
-          item.withMechanism === action.payload.withMechanism,
+          item.selectedSize?.width === action.payload.selectedSize?.width &&
+          item.selectedSize?.length === action.payload.selectedSize?.length &&
+          item.withMechanism === action.payload.withMechanism
       )
 
       let newItems
