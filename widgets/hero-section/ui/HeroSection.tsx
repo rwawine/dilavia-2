@@ -20,7 +20,7 @@ export const HeroSection = () => {
       title: "Обновленный сайт",
       subtitle: "Добро пожаловать",
       description: "Мы обновили дизайн и функциональность",
-      image: "/images/banners/pizza-banner.jpg",
+      image: "/assorted-living-room-furniture.png",
       buttonText: "Перейти в каталог",
       buttonLink: "/catalog",
     },
@@ -28,7 +28,7 @@ export const HeroSection = () => {
       title: "Новая линейка диванов",
       subtitle: "Выберите свой стиль",
       description: "Подойдет для любого интерьера",
-      image: "/images/banners/pizza-banner.jpg",
+      image: "/assorted-living-room-furniture.png",
       buttonText: "Перейти в каталог",
       buttonLink: "/catalog&category=sofa",
     }

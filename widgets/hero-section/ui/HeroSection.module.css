@@ -48,7 +48,6 @@
 
 .slide {
   border-radius: 32px;
-  border: 1px solid var(--accent-color);
   position: relative;
   width: 1400px;
   height: 450px;
@@ -61,7 +60,6 @@
   top: 0;
   left: 0;
   width: 100%;
-  background-color: #000;
   height: 100%;
   background-size: cover;
   background-position: center;
