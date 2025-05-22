@@ -26,6 +26,8 @@ export const Header = () => {
   const menuRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
   const catalogRef = useRef<HTMLDivElement>(null)
+  const mobileCatalogButtonRef = useRef<HTMLButtonElement>(null)
+  const desktopCatalogButtonRef = useRef<HTMLButtonElement>(null)
 
   // Вычисляем общее количество товаров в корзине (мебель + ткани)
   const totalCartItems = cartState.totalItems + fabricCartState.totalItems
@@ -57,7 +59,11 @@ export const Header = () => {
       if (
         isCatalogOpen &&
         catalogRef.current &&
-        !catalogRef.current.contains(event.target as Node)
+        mobileCatalogButtonRef.current &&
+        desktopCatalogButtonRef.current &&
+        !catalogRef.current.contains(event.target as Node) &&
+        !mobileCatalogButtonRef.current.contains(event.target as Node) &&
+        !desktopCatalogButtonRef.current.contains(event.target as Node)
       ) {
         setIsCatalogOpen(false)
       }
@@ -137,6 +143,7 @@ export const Header = () => {
               <li className={styles.navItem}>
                 <div className={styles.catalogWrapper}>
                   <button 
+                    ref={mobileCatalogButtonRef}
                     className={`${styles.catalogButton} ${isCatalogOpen ? styles.active : ''}`}
                     onClick={toggleCatalog}
                     aria-expanded={isCatalogOpen}
@@ -267,6 +274,7 @@ export const Header = () => {
             <li className={styles.navItem}>
               <div className={styles.catalogWrapper}>
                 <button 
+                  ref={desktopCatalogButtonRef}
                   className={`${styles.catalogButton} ${isCatalogOpen ? styles.active : ''}`}
                   onClick={toggleCatalog}
                   aria-expanded={isCatalogOpen}

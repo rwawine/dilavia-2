@@ -9,12 +9,11 @@ import styles from "./PopularProducts.module.css"
 // Import Swiper styles
 import "swiper/css"
 import "swiper/css/pagination"
+import "swiper/css/navigation"
 
 export const PopularProducts = ({ products }: { products: any[] }) => {
   const [slidesPerView, setSlidesPerView] = useState(4)
-  const prevRef = useRef<HTMLDivElement>(null)
-  const nextRef = useRef<HTMLDivElement>(null)
-  const paginationRef = useRef<HTMLDivElement>(null)
+  const swiperRef = useRef<any>(null)
 
   // Update slides per view based on screen size
   useEffect(() => {
@@ -56,21 +55,17 @@ export const PopularProducts = ({ products }: { products: any[] }) => {
       <div className="container">
         <div className={styles.sectionHeader}>
           <h2 className={styles.title}>Популярные товары</h2>
-          <p className={styles.subtitle}>Товары с рейтингом популярности выше 4.5</p>
         </div>
 
         <div className={styles.swiperContainer}>
           <Swiper
+            ref={swiperRef}
             modules={[Navigation, Pagination, Autoplay]}
             spaceBetween={20}
             slidesPerView={slidesPerView}
-            navigation={{
-              prevEl: prevRef.current,
-              nextEl: nextRef.current,
-            }}
+            navigation={true}
             pagination={{
               clickable: true,
-              el: paginationRef.current,
             }}
             autoplay={{
               delay: 5000,
@@ -79,14 +74,6 @@ export const PopularProducts = ({ products }: { products: any[] }) => {
             }}
             loop={products.length > slidesPerView}
             className={styles.swiper}
-            onBeforeInit={(swiper) => {
-              // @ts-ignore
-              swiper.params.navigation.prevEl = prevRef.current
-              // @ts-ignore
-              swiper.params.navigation.nextEl = nextRef.current
-              // @ts-ignore
-              swiper.params.pagination.el = paginationRef.current
-            }}
           >
             {products.map((product) => (
               <SwiperSlide key={product.id} className={styles.swiperSlide}>
@@ -98,7 +85,10 @@ export const PopularProducts = ({ products }: { products: any[] }) => {
           </Swiper>
 
           <div className={styles.customNavigation}>
-            <div ref={prevRef} className={styles.navPrev}>
+            <button 
+              className={styles.navPrev}
+              onClick={() => swiperRef.current?.swiper.slidePrev()}
+            >
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path
                   d="M15 18L9 12L15 6"
@@ -108,8 +98,11 @@ export const PopularProducts = ({ products }: { products: any[] }) => {
                   strokeLinejoin="round"
                 />
               </svg>
-            </div>
-            <div ref={nextRef} className={styles.navNext}>
+            </button>
+            <button 
+              className={styles.navNext}
+              onClick={() => swiperRef.current?.swiper.slideNext()}
+            >
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path
                   d="M9 6L15 12L9 18"
@@ -119,10 +112,8 @@ export const PopularProducts = ({ products }: { products: any[] }) => {
                   strokeLinejoin="round"
                 />
               </svg>
-            </div>
+            </button>
           </div>
-
-          <div ref={paginationRef} className={styles.customPagination}></div>
         </div>
       </div>
     </section>

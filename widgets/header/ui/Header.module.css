@@ -3,7 +3,6 @@
   top: 0;
   z-index: 100;
   background-color: var(--background-color);
-  box-shadow: var(--shadow-sm);
   height: var(--header-height);
 }
 
@@ -33,7 +32,7 @@
 
 .navList {
   display: flex;
-  gap: var(--spacing-lg);
+  gap: var(--spacing-l);
 }
 
 .navItem {
@@ -42,11 +41,11 @@
 
 .navLink {
   font-size: var(--font-size-md);
-  font-weight: 500;
   color: var(--text-color);
   transition: color var(--transition-fast);
   display: block;
-  padding: var(--spacing-sm) 0;
+  font-weight: 500;
+  padding: 8px 12px;
 }
 
 .navLink:hover {
@@ -65,7 +64,7 @@
   justify-content: center;
   width: 40px;
   height: 40px;
-  border-radius: 50%;
+  border-radius: 10px;
   transition: background-color var(--transition-fast);
 }
 
@@ -175,7 +174,6 @@
 .mobileMenuHeader {
   display: none;
   padding: var(--spacing-md);
-  border-bottom: 1px solid var(--border-color);
   justify-content: space-between;
   align-items: center;
 }
@@ -265,8 +263,11 @@
 }
 
 @media (max-width: 1024px) {
+  .navLink {
+    padding: 0;
+  }
   .navList {
-    gap: var(--spacing-md);
+    gap: var(--spacing-sm);
   }
 }
 
@@ -319,12 +320,11 @@
     flex-direction: column;
     width: 100%;
     padding: var(--spacing-md);
-    gap: 0;
+    gap: 4px;
   }
 
   .navItem {
     width: 100%;
-    border-bottom: 1px solid var(--border-color);
   }
 
   .navItem:last-child {
@@ -333,12 +333,18 @@
 
   .navLink {
     display: block;
-    padding: var(--spacing-md) 0;
+    padding: 12px 16px;
+    border-radius: 8px;
     width: 100%;
+  }
+
+  .navLink:hover {
+    background-color: rgba(0, 122, 255, 0.1);
   }
 
   .mobileActions {
     display: flex;
+    flex-direction: column;
   }
 
   .mobileContact {
@@ -359,16 +365,17 @@
   border: none;
   color: inherit;
   font: inherit;
+  font-weight: 500;
   cursor: pointer;
   transition: color 0.2s;
 }
 
 .catalogButton:hover {
-  color: #007AFF;
+  color: var(--accent-color);
 }
 
 .catalogButton.active {
-  color: #007AFF;
+  color: var(--accent-color);
 }
 
 .catalogArrow {
@@ -387,7 +394,7 @@
   background: white;
   border-radius: 8px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  padding: 8px 0;
+  padding: 0;
   z-index: 1000;
   animation: dropdownAppear 0.2s ease;
 }
@@ -407,6 +414,7 @@
   display: block;
   padding: 8px 16px;
   color: #333;
+  border-radius: 10px;
   text-decoration: none;
   transition: all 0.2s;
 }

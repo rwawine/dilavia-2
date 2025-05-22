@@ -77,8 +77,6 @@ export default function CheckoutPage() {
 
     if (validateForm()) {
       // In a real app, you would send the order to the server here
-      console.log("Order submitted:", { formData, items: state.items })
-
       // Clear cart and redirect to success page
       dispatch({ type: "CLEAR_CART" })
       router.push("/success")

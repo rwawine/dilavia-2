@@ -206,7 +206,20 @@
 
 @media (max-width: 768px) {
   .slide {
-    height: 350px;
+    height: 300px;
+  }
+
+  .heroSection {
+    min-height: 370px;
+    height: 330px !important;
+  }
+
+  .sliderContainer {
+    height: 330px !important;
+  }
+
+  .slideWrapper {
+    height: 330px !important;
   }
 
   .content {

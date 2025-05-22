@@ -24,7 +24,6 @@ interface FilterType {
 
 export const useFilterTypes = (fabrics: Fabric[] = []): FilterType[] => {
   return useMemo(() => {
-    console.log('Fabrics data:', fabrics) // Отладочный вывод
     const filterTypes = new Set<string>()
     
     if (!fabrics?.length) {

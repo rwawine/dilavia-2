@@ -17,20 +17,20 @@ export const HeroSection = () => {
   
   const heroSlides = [
     {
-      title: "NINJA PIZZA",
-      subtitle: "ПЕПЕРОНІ В МЕНЮ",
-      description: "Спробуйте нашу фірмову піцу з пепероні",
+      title: "Обновленный сайт",
+      subtitle: "Добро пожаловать",
+      description: "Мы обновили дизайн и функциональность",
       image: "/images/banners/pizza-banner.jpg",
-      buttonText: "Замовити",
-      buttonLink: "/menu/pizza",
+      buttonText: "Перейти в каталог",
+      buttonLink: "/catalog",
     },
     {
-      title: "ВИБІР NINJA",
-      subtitle: "ГРОМОВЕРЖЦІ",
-      description: "Дивіться новий фільм від Marvel Studios вже у кіно",
-      image: "/images/banners/thunderbolts-banner.jpg",
-      buttonText: "Купити квитки",
-      buttonLink: "/movies/thunderbolts",
+      title: "Новая линейка диванов",
+      subtitle: "Выберите свой стиль",
+      description: "Подойдет для любого интерьера",
+      image: "/images/banners/pizza-banner.jpg",
+      buttonText: "Перейти в каталог",
+      buttonLink: "/catalog&category=sofa",
     }
   ]
 

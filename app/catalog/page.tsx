@@ -58,9 +58,7 @@ export default function CatalogPage() {
       try {
         const filterOptions = await getAvailableFilters()
         setAvailableColors(filterOptions.colors)
-        console.log("Loaded filter options:", filterOptions)
       } catch (error) {
-        console.error("Failed to load filter options:", error)
       }
     }
 
