@@ -120,10 +120,9 @@ export const FabricCard = ({
           href={`/fabrics/${categoryName}/${collectionName}`}
           className={styles.title}
         >
-          {variant.color.ru}
+          {categoryNameRu} {variant.color.ru}
         </Link>
         <div className={styles.collection}>{collectionNameRu}</div>
-        <div className={styles.category}>{categoryNameRu}</div>
         <div className={styles.actions}>
           <Button
             variant={isInCart ? "secondary" : "primary"}

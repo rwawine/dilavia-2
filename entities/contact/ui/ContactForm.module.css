@@ -75,16 +75,6 @@
   background: linear-gradient(90deg, #1565c0 0%, #1976d2 100%);
 }
 
-.successMsg {
-  color: #388e3c;
-  background: #e8f5e9;
-  border-radius: 8px;
-  padding: 12px;
-  margin-top: 10px;
-  text-align: center;
-  font-weight: 500;
-}
-
 @media (max-width: 600px) {
   .form {
     max-width: 100%;

@@ -43,7 +43,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
   return (
     <div className="container">
       <ProductDetail product={product} allProducts={allCategoryProducts} />
-      <SimilarProducts currentProductId={product.id} category={category} products={allCategoryProducts} limit={4} />
     </div>
   )
 }

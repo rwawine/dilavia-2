@@ -105,6 +105,7 @@
 
 .collection {
   font-size: 0.75rem;
+  width: max-content;
   color: #757575;
   background-color: #f1f3f4;
   padding: 2px 6px;

@@ -25,13 +25,23 @@ export const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link href="/catalog/sofa" className={styles.link}>
+                <Link href="/catalog?category=sofa" className={styles.link}>
                   Диваны
                 </Link>
               </li>
               <li>
-                <Link href="/catalog/bed" className={styles.link}>
+                <Link href="/catalog?category=bed" className={styles.link}>
                   Кровати
+                </Link>
+              </li>
+              <li>
+                <Link href="/catalog?category=armchair" className={styles.link}>
+                  Кресла
+                </Link>
+              </li>
+              <li>
+                <Link href="/catalog?category=kids" className={styles.link}>
+                  Детские кровати
                 </Link>
               </li>
             </ul>

@@ -321,14 +321,6 @@ export default function FabricDetail({ category, collection, similarCollections,
             </Button>
           </div>
 
-          {/* Success message */}
-          {showSuccessMessage && (
-            <div className={styles.successMessage}>
-              <Check size={16} className={styles.successIcon} />
-              <span>{showSuccessMessage}</span>
-            </div>
-          )}
-
           {/* Fabric information tabs */}
           <Tabs defaultValue="description" className={styles.infoTabs}>
             <TabsList className={styles.tabsList}>

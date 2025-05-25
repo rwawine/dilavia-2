@@ -18,7 +18,6 @@ export const HeroSection = () => {
   const heroSlides = [
     {
       title: "Обновленный сайт",
-      subtitle: "Добро пожаловать",
       description: "Мы обновили дизайн и функциональность",
       image: "/assorted-living-room-furniture.png",
       buttonText: "Перейти в каталог",
@@ -26,7 +25,6 @@ export const HeroSection = () => {
     },
     {
       title: "Новая линейка диванов",
-      subtitle: "Выберите свой стиль",
       description: "Подойдет для любого интерьера",
       image: "/assorted-living-room-furniture.png",
       buttonText: "Перейти в каталог",
@@ -68,7 +66,6 @@ export const HeroSection = () => {
               <div className={styles.overlay} />
               <div className={styles.content}>
                 <div className={styles.titleWrapper}>
-                  <h2 className={styles.subtitle}>{slide.subtitle}</h2>
                   <h1 className={styles.title}>{slide.title}</h1>
                 </div>
                 <p className={styles.description}>{slide.description}</p>

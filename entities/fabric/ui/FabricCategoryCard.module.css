@@ -4,16 +4,13 @@
   height: 100%;
   border-radius: var(--radius-md);
   overflow: hidden;
-  box-shadow: var(--shadow-sm);
   transition: transform var(--transition-normal), box-shadow var(--transition-normal);
-  background-color: var(--background-color);
+  background-color: #f6f6f6;
   text-decoration: none;
   color: inherit;
 }
 
 .card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-md);
 }
 
 .imageContainer {
@@ -73,6 +70,11 @@
   font-weight: 600;
   margin: 0 0 var(--spacing-sm) 0;
   color: var(--text-color);
+  transition: all 0.2s ease-in-out;
+}
+
+.card:hover .title {
+  color: orange;
 }
 
 .description {

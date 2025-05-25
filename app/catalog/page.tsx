@@ -22,6 +22,7 @@ export default function CatalogPage() {
   const initialColors = searchParams.get("colors") ? searchParams.get("colors")!.split(",") : []
   const initialSortBy = searchParams.get("sort") || "popularity"
   const initialSofaTypes = searchParams.get("sofaTypes") ? searchParams.get("sofaTypes")!.split(",") : []
+  const initialSelectedSofaType = searchParams.get("selectedSofaType")
 
   // State for products and filters
   const [products, setProducts] = useState<ProductData[]>([])
@@ -56,14 +57,21 @@ export default function CatalogPage() {
   const [dynamicFilters, setDynamicFilters] = useState<{
     subcategories?: string[];
   }>({
-    subcategories: initialSofaTypes
+    subcategories: initialSelectedSofaType ? [initialSelectedSofaType] : initialSofaTypes
   });
 
   // Add new state for pending dynamic filters
   const [pendingDynamicFilters, setPendingDynamicFilters] = useState<{
     subcategories?: string[];
   }>({
-    subcategories: initialSofaTypes
+    subcategories: initialSelectedSofaType ? [initialSelectedSofaType] : initialSofaTypes
+  });
+
+  // Add new state for available dynamic filter options
+  const [availableDynamicFilters, setAvailableDynamicFilters] = useState<{
+    subcategories?: string[];
+  }>({
+    subcategories: []
   });
 
   const filterDrawerRef = useRef<HTMLDivElement>(null)
@@ -74,18 +82,150 @@ export default function CatalogPage() {
   const [isFetchingMore, setIsFetchingMore] = useState(false)
   const loaderRef = useRef<HTMLDivElement | null>(null)
 
-  // Load available filter options
+  // Effect to handle URL parameter changes
   useEffect(() => {
-    async function loadFilterOptions() {
+    const category = searchParams.get("category")
+    if (category) {
+      const newCategories = category.split(",")
+      setActiveCategories(newCategories)
+      setPendingCategories(newCategories)
+    } else {
+      setActiveCategories(["all"])
+      setPendingCategories(["all"])
+    }
+  }, [searchParams])
+
+  // Load products based on active filters
+  const loadProducts = useCallback(async () => {
+    setLoading(true)
+    try {
+      // Prepare category filter
+      const categoryFilter = activeCategories.includes("all") ? "all" : activeCategories.join(",")
+
+      // Load products with filters
+      let filteredProducts = await getProductsByFilters({
+        category: categoryFilter,
+        minPrice: minPrice || priceRange.min,
+        maxPrice: maxPrice || priceRange.max,
+        colors: activeColors.length > 0 ? activeColors : undefined,
+      }).catch((error) => {
+        console.error("Failed to get filtered products:", error)
+        return [] // Return empty array on error
+      })
+
+      // Apply sofa subcategory filters only to sofas
+      if (activeCategories.includes('sofa') && dynamicFilters.subcategories?.length) {
+        filteredProducts = filteredProducts.filter(product => {
+          // If it's a sofa, apply subcategory filter
+          if (product.category === 'sofa') {
+            return 'subcategory-ru' in product && 
+              dynamicFilters.subcategories?.includes((product as any)['subcategory-ru']);
+          }
+          // For other categories, keep the product
+          return true;
+        });
+      }
+
+      // Sort products
+      filteredProducts = await getSortedProducts(filteredProducts, sortBy)
+
+      // Update available filters after getting products
+      const newAvailableFilters = analyzeProductsForFilters(filteredProducts);
+      setAvailableDynamicFilters(newAvailableFilters);
+
+      // Keep the current selection if it's still valid
+      if (dynamicFilters.subcategories?.length) {
+        const validSelections = dynamicFilters.subcategories.filter(selection => 
+          newAvailableFilters.subcategories?.includes(selection)
+        );
+        if (validSelections.length > 0) {
+          setDynamicFilters(prev => ({
+            ...prev,
+            subcategories: validSelections
+          }));
+        }
+      }
+
+      setProducts(filteredProducts)
+    } catch (error) {
+      console.error("Error loading catalog data:", error)
+      setProducts([]) // Set empty products array on error
+    } finally {
+      setLoading(false)
+    }
+  }, [activeCategories, minPrice, maxPrice, activeColors, sortBy, dynamicFilters.subcategories, priceRange.min, priceRange.max]);
+
+  // Initial load of price range
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadInitialData() {
       try {
-        const filterOptions = await getAvailableFilters()
-        setAvailableColors(filterOptions.colors)
+        const range = await getPriceRange().catch((error) => {
+          console.error("Failed to get price range:", error)
+          return { min: 0, max: 10000 }
+        })
+
+        if (!isMounted) return;
+
+        setPriceRange(range)
+
+        // Set default price range if not specified in URL
+        if (minPrice === undefined) setMinPrice(range.min)
+        if (maxPrice === undefined) setMaxPrice(range.max)
+
+        // Set pending values if not already set
+        if (pendingMinPrice === undefined) setPendingMinPrice(range.min)
+        if (pendingMaxPrice === undefined) setPendingMaxPrice(range.max)
       } catch (error) {
+        console.error("Error loading price range:", error)
       }
     }
 
-    loadFilterOptions()
-  }, [])
+    loadInitialData();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Load products when filters change
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      loadProducts();
+    }, 300);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [
+    activeCategories.join(','),
+    minPrice,
+    maxPrice,
+    activeColors.join(','),
+    sortBy,
+    dynamicFilters.subcategories?.join(',')
+  ]);
+
+  // Load available filter options
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadFilterOptions() {
+      try {
+        const filterOptions = await getAvailableFilters()
+        if (isMounted) {
+          setAvailableColors(filterOptions.colors)
+        }
+      } catch (error) {
+        console.error("Failed to load filter options:", error)
+      }
+    }
+
+    loadFilterOptions();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Function to analyze products and extract unique filter values
   const analyzeProductsForFilters = (products: ProductData[]) => {
@@ -104,73 +244,6 @@ export default function CatalogPage() {
       subcategories: Array.from(filters.subcategories),
     };
   };
-
-  // Load products and filter options
-  useEffect(() => {
-    async function loadData() {
-      setLoading(true)
-      try {
-        // Get price range
-        const range = await getPriceRange().catch((error) => {
-          console.error("Failed to get price range:", error)
-          return { min: 0, max: 10000 } // Fallback values
-        })
-
-        setPriceRange(range)
-
-        // Set default price range if not specified in URL
-        if (minPrice === undefined) setMinPrice(range.min)
-        if (maxPrice === undefined) setMaxPrice(range.max)
-
-        // Set pending values if not already set
-        if (pendingMinPrice === undefined) setPendingMinPrice(range.min)
-        if (pendingMaxPrice === undefined) setPendingMaxPrice(range.max)
-
-        // Prepare category filter
-        const categoryFilter = activeCategories.includes("all") ? "all" : activeCategories.join(",")
-
-        // Load products with filters
-        let filteredProducts = await getProductsByFilters({
-          category: categoryFilter,
-          minPrice: minPrice || range.min,
-          maxPrice: maxPrice || range.max,
-          colors: activeColors.length > 0 ? activeColors : undefined,
-        }).catch((error) => {
-          console.error("Failed to get filtered products:", error)
-          return [] // Return empty array on error
-        })
-
-        // Analyze products for dynamic filters
-        const newDynamicFilters = analyzeProductsForFilters(filteredProducts);
-        setDynamicFilters(newDynamicFilters);
-
-        // Apply sofa subcategory filters only to sofas
-        if (activeCategories.includes('sofa') && dynamicFilters.subcategories?.length) {
-          filteredProducts = filteredProducts.filter(product => {
-            // If it's a sofa, apply subcategory filter
-            if (product.category === 'sofa') {
-              return 'subcategory-ru' in product && 
-                dynamicFilters.subcategories?.includes((product as any)['subcategory-ru']);
-            }
-            // For other categories, keep the product
-            return true;
-          });
-        }
-
-        // Sort products
-        filteredProducts = await getSortedProducts(filteredProducts, sortBy)
-
-        setProducts(filteredProducts)
-      } catch (error) {
-        console.error("Error loading catalog data:", error)
-        setProducts([]) // Set empty products array on error
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadData()
-  }, [activeCategories, minPrice, maxPrice, activeColors, sortBy])
 
   // Update URL with filters without navigating away
   useEffect(() => {
@@ -203,11 +276,18 @@ export default function CatalogPage() {
       params.delete("colors")
     }
 
-    // Update or remove sofa types parameter
-    if (dynamicFilters.subcategories?.length) {
-      params.set("sofaTypes", dynamicFilters.subcategories.join(","))
+    // Always keep all available sofa types in the URL
+    if (availableDynamicFilters.subcategories?.length) {
+      params.set("sofaTypes", availableDynamicFilters.subcategories.join(","))
     } else {
       params.delete("sofaTypes")
+    }
+
+    // Update or remove selected sofa type parameter
+    if (dynamicFilters.subcategories?.length === 1) {
+      params.set("selectedSofaType", dynamicFilters.subcategories[0])
+    } else {
+      params.delete("selectedSofaType")
     }
 
     // Update or remove sort parameter
@@ -220,7 +300,7 @@ export default function CatalogPage() {
     // Update URL without refreshing the page using history API
     const newUrl = params.toString() ? `?${params.toString()}` : window.location.pathname
     window.history.replaceState({}, "", newUrl)
-  }, [activeCategories, minPrice, maxPrice, activeColors, priceRange, sortBy, dynamicFilters])
+  }, [activeCategories, minPrice, maxPrice, activeColors, priceRange, sortBy, dynamicFilters, availableDynamicFilters])
 
   // Close drawer when clicking outside
   useEffect(() => {
@@ -232,6 +312,13 @@ export default function CatalogPage() {
         event.target === filterOverlayRef.current
       ) {
         setIsFiltersOpen(false)
+        // Reset pending filters to active filters when closing without applying
+        setPendingCategories(activeCategories)
+        setPendingMinPrice(minPrice)
+        setPendingMaxPrice(maxPrice)
+        setPendingColors(activeColors)
+        setPendingDynamicFilters(dynamicFilters)
+        setFiltersChanged(false)
       }
     }
 
@@ -239,7 +326,7 @@ export default function CatalogPage() {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside)
     }
-  }, [isFiltersOpen])
+  }, [isFiltersOpen, activeCategories, minPrice, maxPrice, activeColors, dynamicFilters])
 
   // Lock body scroll when drawer is open
   useEffect(() => {
@@ -370,11 +457,11 @@ export default function CatalogPage() {
 
   // Apply filters
   const applyFilters = () => {
-    setActiveCategories(pendingCategories)
+    setActiveCategories([...pendingCategories])
     setMinPrice(pendingMinPrice)
     setMaxPrice(pendingMaxPrice)
-    setActiveColors(pendingColors)
-    setDynamicFilters(pendingDynamicFilters)
+    setActiveColors([...pendingColors])
+    setDynamicFilters({...pendingDynamicFilters})
     setFiltersChanged(false)
     setIsFiltersOpen(false)
   }
@@ -390,23 +477,13 @@ export default function CatalogPage() {
     setPendingMinPrice(priceRange.min)
     setPendingMaxPrice(priceRange.max)
     setPendingColors([])
-    setPendingDynamicFilters({})
+    setPendingDynamicFilters(dynamicFilters)
     setFiltersChanged(true)
   }
 
   // Toggle filters drawer
   const toggleFilters = () => {
     setIsFiltersOpen(!isFiltersOpen)
-
-    // Sync pending state with current state when opening
-    if (!isFiltersOpen) {
-      setPendingCategories(activeCategories)
-      setPendingMinPrice(minPrice)
-      setPendingMaxPrice(maxPrice)
-      setPendingColors(activeColors)
-      setPendingDynamicFilters(dynamicFilters)
-      setFiltersChanged(false)
-    }
   }
 
   // Сброс visibleCount при смене фильтров/сортировки
@@ -433,6 +510,28 @@ export default function CatalogPage() {
       if (observer && loaderRef.current) observer.unobserve(loaderRef.current)
     }
   }, [products.length, visibleCount])
+
+  // Always keep all sofa types for filters
+  useEffect(() => {
+    async function loadAllSofaTypes() {
+      if (!activeCategories.includes('sofa')) return;
+      try {
+        // Получаем все товары-диваны
+        const allSofas = await getProductsByFilters({ category: 'sofa' });
+        // Собираем все уникальные типы диванов
+        const allTypes = Array.from(new Set(
+          allSofas
+            .filter(p => 'subcategory-ru' in p)
+            .map(p => (p as any)['subcategory-ru'])
+            .filter(Boolean)
+        ));
+        setAvailableDynamicFilters(prev => ({ ...prev, subcategories: allTypes }));
+      } catch (e) {
+        // fallback: не меняем фильтры
+      }
+    }
+    loadAllSofaTypes();
+  }, [activeCategories]);
 
   return (
     <div className="container">
@@ -479,7 +578,16 @@ export default function CatalogPage() {
           <h2 className={styles.filterDrawerTitle}>Фильтры</h2>
           <button
             className={styles.closeFilterButton}
-            onClick={() => setIsFiltersOpen(false)}
+            onClick={() => {
+              setIsFiltersOpen(false)
+              // Reset pending filters to active filters when closing without applying
+              setPendingCategories(activeCategories)
+              setPendingMinPrice(minPrice)
+              setPendingMaxPrice(maxPrice)
+              setPendingColors(activeColors)
+              setPendingDynamicFilters(dynamicFilters)
+              setFiltersChanged(false)
+            }}
             aria-label="Закрыть фильтры"
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -554,7 +662,7 @@ export default function CatalogPage() {
           )}
 
           {/* Dynamic Filters */}
-          {Object.entries(dynamicFilters).map(([filterType, values]) => {
+          {Object.entries(availableDynamicFilters).map(([filterType, values]) => {
             // Skip if no values or if it's sofa filters and sofa category is not selected
             if (values.length === 0) return null;
             if (filterType === 'subcategories' && !pendingCategories.includes('sofa')) return null;

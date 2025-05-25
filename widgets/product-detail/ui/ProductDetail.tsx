@@ -11,6 +11,7 @@ import { useCart } from "@/entities/cart/model/cartContext"
 import { useFavorites } from "@/entities/favorites/model/favoritesContext"
 import SimilarProducts from "@/widgets/similar-products/ui/SimilarProducts"
 import styles from "./ProductDetail.module.css"
+import type { CartItem } from "@/entities/cart/model/types"
 
 interface ProductDetailProps {
   product: SofaData | BedData | KidsBedData
@@ -22,16 +23,12 @@ interface InstallmentPlan {
   installment: {
     duration_months: number
     interest: string
+    additional_fees?: string
   }
-}
-
-interface CartItem {
-  id: string
-  product: ProductData
-  quantity: number
-  selectedSize?: Size
-  withMechanism?: boolean
-  totalPrice: number
+  credit?: {
+    duration_months: number
+    interest: string
+  }
 }
 
 interface FavoriteItem {
@@ -39,54 +36,60 @@ interface FavoriteItem {
   product: ProductData
 }
 
+interface SofaSizes {
+  sofa: Size[]
+  materials?: Material[]
+  features?: string[]
+  installment_plans?: InstallmentPlan[]
+  country?: string
+  warranty?: string
+  "commercial-offer"?: string
+  style?: string
+  color?: string
+  delivery?: {
+    available: boolean
+    cost: string
+    time: string
+  }
+}
+
+interface ProductWithCategory extends ProductData {
+  "category-ru"?: string
+  subcategory?: string
+  "subcategory-ru"?: string
+}
+
 export const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts }) => {
   const router = useRouter()
-  // State for product options
-  const [activeTab, setActiveTab] = useState("description")
+  const [activeTab, setActiveTab] = useState("specifications")
   const [activeImageIndex, setActiveImageIndex] = useState(0)
   const [isZoomed, setIsZoomed] = useState(false)
   const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 })
   const [selectedSize, setSelectedSize] = useState<number>(0)
-  const [selectedMechanism, setSelectedMechanism] = useState("")
   const [withMechanism, setWithMechanism] = useState(false)
 
-  // Refs
   const imageRef = React.useRef<HTMLDivElement>(null)
   const mainImageRef = React.useRef<HTMLImageElement>(null)
 
-  // Context hooks
   const { state: cartState, dispatch: cartDispatch } = useCart()
   const { state: favoritesState, dispatch: favoritesDispatch } = useFavorites()
 
-  // Determine product type
   const isSofa = product.category === "sofa"
   const isBed = product.category === "bed"
   const isKidsBed = product.category === "kids"
 
-  const productLoadedRef = React.useRef(false)
-
-  // Generate a unique ID for this product configuration
   const getCartItemId = () => {
     return `${product.id}-${selectedSize}-${withMechanism}`
   }
 
-  // Check if this exact configuration is in cart
-  const isInCart = cartState.items.some((item: CartItem) =>
+  const isInCart = cartState.items.some((item) =>
     item.product.id === product.id &&
-    (!product.sizes?.length || item.selectedSize === selectedSize) &&
-    (!product.liftingMechanisms?.length || item.withMechanism === withMechanism)
+    (!isSofa || !("sizes" in product) || item.selectedSize === sizes[selectedSize]) &&
+    (!isSofa || !("sizes" in product) || item.withMechanism === withMechanism)
   )
 
-  // Check if product is in favorites
   const isFavorite = favoritesState.items.some((item: FavoriteItem) => item.id === product.id)
 
-  React.useEffect(() => {
-    if (!productLoadedRef.current) {
-      productLoadedRef.current = true
-    }
-  }, [product])
-
-  // Handle image zoom
   const handleImageZoom = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!isZoomed || !imageRef.current || !mainImageRef.current) return
 
@@ -97,75 +100,19 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProduc
     setZoomPosition({ x, y })
   }
 
-  // Toggle zoom
   const toggleZoom = () => {
     setIsZoomed(!isZoomed)
   }
 
-  // Get sizes based on product type
   const getSizes = (): Size[] => {
-    if (isBed && "bed" in product && product.bed && Array.isArray(product.bed)) {
-      return product.bed.map((size: any) => ({
-        width: size.width,
-        length: size.length,
-        price: size.price,
-      }))
-    } else if (
-      isSofa &&
-      "sizes" in product &&
-      product.sizes &&
-      "sofa" in product.sizes &&
-      Array.isArray(product.sizes.sofa)
-    ) {
-      return product.sizes.sofa.map((size: any) => ({
-        width: size.width,
-        length: size.length,
-        price: size.price,
-      }))
-    } else if (
-      isKidsBed &&
-      "specs" in product &&
-      product.specs &&
-      "kids-tables" in product.specs &&
-      Array.isArray(product.specs["kids-tables"])
-    ) {
-      return product.specs["kids-tables"].map((size: any) => ({
-        width: size.width,
-        length: size.length,
-        price: size.price,
-      }))
+    if (isSofa && "sizes" in product && product.sizes?.sofa) {
+      return product.sizes.sofa
     }
     return []
   }
 
   const sizes = getSizes()
 
-  // Check if lifting mechanism is available for the selected size
-  const hasLiftingMechanism = () => {
-    if (
-      isBed &&
-      "bed" in product &&
-      product.bed &&
-      product.bed[selectedSize] &&
-      product.bed[selectedSize].lifting_mechanism
-    ) {
-      return product.bed[selectedSize].lifting_mechanism.length > 1
-    } else if (
-      isKidsBed &&
-      product.specs &&
-      product.specs["kids-tables"] &&
-      product.specs["kids-tables"][selectedSize] &&
-      product.specs["kids-tables"][selectedSize].lifting_mechanism
-    ) {
-      return (
-        product.specs["kids-tables"][selectedSize].lifting_mechanism.length > 1 &&
-        product.specs["kids-tables"][selectedSize].lifting_mechanism[1].available
-      )
-    }
-    return false
-  }
-
-  // Get price with selected options
   const getPrice = () => {
     if (!sizes || sizes.length === 0) {
       return product.price.current
@@ -175,122 +122,45 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProduc
       return product.price.current
     }
 
-    let price = sizes[selectedSize].price
-
-    // Add mechanism price for beds
-    if (isBed && "bed" in product && withMechanism && hasLiftingMechanism()) {
-      price += product.bed[selectedSize].lifting_mechanism[1].price
-    }
-
-    // Add mechanism price for kids beds
-    if (
-      isKidsBed &&
-      withMechanism &&
-      hasLiftingMechanism() &&
-      product.specs &&
-      product.specs["kids-tables"] &&
-      product.specs["kids-tables"][selectedSize].lifting_mechanism
-    ) {
-      price += product.specs["kids-tables"][selectedSize].lifting_mechanism[1].price
-    }
-
-    return price
+    return sizes[selectedSize].price
   }
 
-  // Get materials based on product type
-  const getMaterials = (): Material[] => {
-    if (isKidsBed && "specs" in product && product.specs && "materials" in product.specs) {
-      return product.specs.materials || []
+  const getMaterials = () => {
+    if (isSofa && "sizes" in product && (product.sizes as SofaSizes).materials) {
+      return (product.sizes as SofaSizes).materials
     }
     return []
   }
 
   const materials = getMaterials()
 
-  // Get features based on product type
-  const getFeatures = (): string[] => {
-    if (isKidsBed && "specs" in product && product.specs && "features" in product.specs) {
-      return product.specs.features || []
+  const getFeatures = () => {
+    if (isSofa && "sizes" in product && (product.sizes as SofaSizes).features) {
+      return (product.sizes as SofaSizes).features
     }
     return []
   }
 
   const features = getFeatures()
 
-  // Get installment plans
   const getInstallmentPlans = () => {
-    if ("installment_plans" in product && product.installment_plans) {
-      return product.installment_plans
-    } else if (isKidsBed && product.specs && product.specs.installment_plans) {
-      return product.specs.installment_plans
+    if (isSofa && "sizes" in product && (product.sizes as SofaSizes).installment_plans) {
+      return (product.sizes as SofaSizes).installment_plans
     }
     return []
   }
 
   const installmentPlans = getInstallmentPlans()
 
-  // Get product images
   const images = product.images && product.images.length > 0 ? product.images : ["/placeholder.svg"]
-
-  // Get product availability
   const availability = product.availability || "Под заказ"
-
-  // Get manufacturing time
   const manufacturing = product.manufacturing || "Уточняйте у менеджера"
+  const country = isSofa && "sizes" in product ? (product.sizes as SofaSizes).country : "Не указано"
+  const warranty = isSofa && "sizes" in product ? (product.sizes as SofaSizes).warranty : "Не указано"
+  const commercialOffer = isSofa && "sizes" in product ? (product.sizes as SofaSizes)["commercial-offer"] : null
+  const style = isSofa && "sizes" in product ? (product.sizes as SofaSizes).style : null
+  const delivery = isSofa && "sizes" in product ? (product.sizes as SofaSizes).delivery : null
 
-  // Get product country
-  const country =
-    "country" in product
-      ? product.country
-      : isKidsBed && product.specs && product.specs.country
-        ? product.specs.country
-        : "Не указано"
-
-  // Get product warranty
-  const warranty =
-    "warranty" in product
-      ? product.warranty
-      : isKidsBed && product.specs && product.specs.warranty
-        ? product.specs.warranty
-        : "Не указано"
-
-  // Get commercial offer
-  const commercialOffer =
-    "commercial-offer" in product
-      ? product["commercial-offer"]
-      : isKidsBed && product.specs && product.specs["commercial-offer"]
-        ? product.specs["commercial-offer"]
-        : null
-
-  // Get product style
-  const style =
-    "style" in product ? product.style : isKidsBed && product.specs && product.specs.style ? product.specs.style : null
-
-  // Get max load
-  const maxLoad =
-    "max_load" in product
-      ? product.max_load
-      : isKidsBed && product.specs && product.specs.max_load
-        ? product.specs.max_load
-        : null
-
-  // Get delivery info
-  const delivery =
-    "delivery" in product
-      ? product.delivery
-      : isKidsBed && product.specs && product.specs.delivery
-        ? product.specs.delivery
-        : null
-
-  // Get promotion info
-  const promotion =
-    "promotion" in product
-      ? product.promotion
-      : isKidsBed && product.specs && product.specs.promotion
-        ? product.specs.promotion
-        : null
-
-  // Handle adding to cart
   const handleAddToCart = () => {
     cartDispatch({
       type: "ADD_TO_CART",
@@ -298,119 +168,96 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProduc
         id: getCartItemId(),
         product,
         quantity: 1,
-        selectedSize: selectedSize,
+        selectedSize: sizes[selectedSize],
         withMechanism: withMechanism,
         totalPrice: getPrice()
       }
     })
   }
 
-  // Handle toggling favorites
   const toggleFavorite = () => {
     if (isFavorite) {
       favoritesDispatch({ type: "REMOVE_FROM_FAVORITES", payload: product.id })
     } else {
-      favoritesDispatch({ type: "ADD_TO_FAVORITES", payload: product })
+      favoritesDispatch({ type: "ADD_TO_FAVORITES", payload: { id: product.id, product } })
     }
   }
 
-  // Get mechanism price
-  const getMechanismPrice = () => {
-    if (isBed && "bed" in product && product.bed && product.bed[selectedSize]?.lifting_mechanism?.[1]) {
-      return product.bed[selectedSize].lifting_mechanism[1].price
-    } else if (
-      isKidsBed &&
-      product.specs &&
-      product.specs["kids-tables"] &&
-      product.specs["kids-tables"][selectedSize]?.lifting_mechanism?.[1]
-    ) {
-      return product.specs["kids-tables"][selectedSize].lifting_mechanism[1].price
-    }
-    return 0
-  }
-
-  // Get specific features for product type
   const getSpecificFeatures = () => {
     const specificFeatures = []
 
-    if (isSofa && "seats" in product && product.seats) {
-      specificFeatures.push({
-        name: "Количество мест",
-        value: product.seats,
-      })
-    }
+    if (isSofa && "sizes" in product) {
+      const sofaSizes = product.sizes as SofaSizes
+      if (sofaSizes.features) {
+        specificFeatures.push(...sofaSizes.features.map(feature => ({
+          name: feature.split(":")[0],
+          value: feature.split(":")[1]?.trim() || "Да"
+        })))
+      }
 
-    if (isSofa && "isSleeper" in product) {
-      specificFeatures.push({
-        name: "Раскладной",
-        value: product.isSleeper ? "Да" : "Нет",
-      })
-    }
+      if (sofaSizes.style) {
+        specificFeatures.push({
+          name: "Стиль",
+          value: sofaSizes.style
+        })
+      }
 
-    if (isSofa && "mechanism" in product && product.mechanism) {
-      specificFeatures.push({
-        name: "Механизм трансформации",
-        value: product.mechanism,
-      })
-    }
-
-    if (isBed && "mattressIncluded" in product) {
-      specificFeatures.push({
-        name: "Матрас в комплекте",
-        value: product.mattressIncluded ? "Да" : "Нет",
-      })
-    }
-
-    if (("hasStorage" in product && product.hasStorage !== undefined) || (isKidsBed && product.specs?.hasStorage)) {
-      specificFeatures.push({
-        name: "Ящик для белья",
-        value: product.hasStorage || (isKidsBed && product.specs?.hasStorage) ? "Да" : "Нет",
-      })
-    }
-
-    if (isBed && "frameType" in product && product.frameType) {
-      specificFeatures.push({
-        name: "Тип каркаса",
-        value: product.frameType,
-      })
-    }
-
-    if (style) {
-      specificFeatures.push({
-        name: "Стиль",
-        value: style,
-      })
-    }
-
-    if (maxLoad) {
-      specificFeatures.push({
-        name: "Максимальная нагрузка",
-        value: `${maxLoad} кг`,
-      })
+      if (sofaSizes.color) {
+        specificFeatures.push({
+          name: "Цвет",
+          value: sofaSizes.color
+        })
+      }
     }
 
     specificFeatures.push({
       name: "Страна производства",
-      value: country,
+      value: country
     })
 
     specificFeatures.push({
       name: "Гарантия",
-      value: warranty,
+      value: warranty
     })
 
     return specificFeatures
   }
 
-  // Get dimensions based on product type
-  const getDimensions = () => {
-    if (isKidsBed && "specs" in product && product.specs && "sleepingPlace" in product.specs) {
-      return product.specs.sleepingPlace
-    }
-    return null
-  }
+  const getCategoryLink = () => {
+    const category = product.category
+    const subcategory = (product as ProductWithCategory).subcategory
+    const subcategoryRu = (product as ProductWithCategory)["subcategory-ru"]
 
-  const dimensions = getDimensions()
+    if (!category) return "/catalog"
+
+    let link = `/catalog?category=${category}`
+    
+    // For sofas, add sofaTypes parameter with all available types and selected type
+    if (category === "sofa") {
+      // Get all available sofa types from allProducts
+      const allSofaTypes = allProducts
+        .filter(p => p.category === "sofa" && "subcategory-ru" in p)
+        .map(p => (p as ProductWithCategory)["subcategory-ru"])
+        .filter((value, index, self) => value && self.indexOf(value) === index)
+        .join(",")
+
+      if (allSofaTypes) {
+        // Add all available types to show in filters
+        link += `&sofaTypes=${encodeURIComponent(allSofaTypes)}`
+        
+        // Add selected type to filter
+        if (subcategoryRu) {
+          link += `&selectedSofaType=${encodeURIComponent(subcategoryRu)}`
+        }
+      }
+    }
+    // For other categories, add subcategory if exists
+    else if (subcategory) {
+      link += `&subcategory=${subcategory}`
+    }
+
+    return link
+  }
 
   if (!product) {
     return <div className={styles.loading}>Загрузка...</div>
@@ -429,15 +276,17 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProduc
             Каталог
           </Link>
           <span className={styles.breadcrumbSeparator}>/</span>
-          <Link href={`/catalog?category=${product.category}`} className={styles.breadcrumbLink}>
-            {product.category === "sofa"
-              ? "Диваны"
-              : product.category === "bed"
-                ? "Кровати"
-                : product.category === "kids"
-                  ? "Детские кровати"
-                  : "Товары"}
+          <Link href={getCategoryLink()} className={styles.breadcrumbLink}>
+            {(product as ProductWithCategory)["category-ru"] || "Товары"}
           </Link>
+          {(product as ProductWithCategory)["subcategory-ru"] && (
+            <>
+              <span className={styles.breadcrumbSeparator}>/</span>
+              <Link href={getCategoryLink()} className={styles.breadcrumbLink}>
+                {(product as ProductWithCategory)["subcategory-ru"]}
+              </Link>
+            </>
+          )}
           <span className={styles.breadcrumbSeparator}>/</span>
           <span className={styles.breadcrumbCurrent}>{product.name}</span>
         </div>
@@ -548,7 +397,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProduc
                         className={`${styles.sizeOption} ${selectedSize === index ? styles.active : ""}`}
                         onClick={() => {
                           setSelectedSize(index)
-                          setWithMechanism(false) // Reset mechanism when changing size
+                          setWithMechanism(false)
                         }}
                       >
                         <span className={styles.sizeText}>
@@ -565,30 +414,10 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProduc
                   </div>
                 </div>
               )}
-
-              {/* Lifting Mechanism Option */}
-              {hasLiftingMechanism() && (
-                <div className={styles.optionGroup}>
-                  <h3 className={styles.optionTitle}>Дополнительные опции:</h3>
-                  <label className={styles.checkboxOption}>
-                    <input
-                      type="checkbox"
-                      checked={withMechanism}
-                      onChange={() => setWithMechanism(!withMechanism)}
-                      className={styles.checkboxInput}
-                    />
-                    <span className={styles.customCheckbox}></span>
-                    <span className={styles.checkboxLabel}>
-                      Подъемный механизм
-                      <span className={styles.optionPrice}>+{formatPrice(getMechanismPrice())} ₽</span>
-                    </span>
-                  </label>
-                </div>
-              )}
             </div>
 
             {/* Action Buttons */}
-            <div className={styles.actions}>
+            <div className={styles.actionButtons}>
               <Button
                 onClick={isInCart ? () => window.location.href = '/cart' : handleAddToCart}
                 className={styles.addToCartButton}
@@ -612,20 +441,6 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProduc
                 <Heart size={20} fill={isFavorite ? "#FF4D4D" : "none"} color={isFavorite ? "#FF4D4D" : "#333"} />
               </button>
             </div>
-
-            {product.characteristics && (
-              <div className={styles.characteristics}>
-                <h3 className={styles.characteristicsTitle}>Характеристики</h3>
-                <ul className={styles.characteristicsList}>
-                  {Object.entries(product.characteristics).map(([key, value]) => (
-                    <li key={key} className={styles.characteristicsItem}>
-                      <span className={styles.characteristicsKey}>{key}:</span>
-                      <span className={styles.characteristicsValue}>{value}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
           </div>
         </div>
       </div>
@@ -633,12 +448,6 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProduc
       {/* Product Tabs */}
       <div className={styles.productTabs}>
         <div className={styles.tabsHeader}>
-          <button
-            className={`${styles.tabButton} ${activeTab === "description" ? styles.active : ""}`}
-            onClick={() => setActiveTab("description")}
-          >
-            Описание
-          </button>
           <button
             className={`${styles.tabButton} ${activeTab === "specifications" ? styles.active : ""}`}
             onClick={() => setActiveTab("specifications")}
@@ -654,35 +463,6 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProduc
         </div>
 
         <div className={styles.tabContent}>
-          {/* Description Tab */}
-          {activeTab === "description" && (
-            <div className={styles.descriptionTab}>
-              <div className={styles.descriptionText}>
-                <p>{product.description}</p>
-              </div>
-
-              {features && features.length > 0 && (
-                <div className={styles.featuresSection}>
-                  <h3 className={styles.sectionTitle}>Особенности</h3>
-                  <ul className={styles.featuresList}>
-                    {features.map((feature, index) => (
-                      <li key={index} className={styles.featureItem}>
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {commercialOffer && (
-                <div className={styles.commercialOfferSection}>
-                  <h3 className={styles.sectionTitle}>Коммерческое предложение</h3>
-                  <div className={styles.commercialOfferContent}>{commercialOffer}</div>
-                </div>
-              )}
-            </div>
-          )}
-
           {/* Specifications Tab */}
           {activeTab === "specifications" && (
             <div className={styles.specificationsTab}>
@@ -702,30 +482,18 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProduc
                   </table>
                 </div>
 
-                {/* Dimensions */}
-                {dimensions && (
+                {/* Materials */}
+                {materials && materials.length > 0 && (
                   <div className={styles.specificationGroup}>
-                    <h3 className={styles.sectionTitle}>Габариты</h3>
+                    <h3 className={styles.sectionTitle}>Материалы</h3>
                     <table className={styles.specTable}>
                       <tbody>
-                        {dimensions.width && (
-                          <tr className={styles.specRow}>
-                            <td className={styles.specName}>Ширина</td>
-                            <td className={styles.specValue}>{dimensions.width} см</td>
+                        {materials.map((material, index) => (
+                          <tr key={index} className={styles.specRow}>
+                            <td className={styles.specName}>{material.localizedTitles.ru}</td>
+                            <td className={styles.specValue}>{material.type}</td>
                           </tr>
-                        )}
-                        {dimensions.height && (
-                          <tr className={styles.specRow}>
-                            <td className={styles.specName}>Высота</td>
-                            <td className={styles.specValue}>{dimensions.height} см</td>
-                          </tr>
-                        )}
-                        {dimensions.depth && (
-                          <tr className={styles.specRow}>
-                            <td className={styles.specName}>Глубина</td>
-                            <td className={styles.specValue}>{dimensions.depth} см</td>
-                          </tr>
-                        )}
+                        ))}
                       </tbody>
                     </table>
                   </div>

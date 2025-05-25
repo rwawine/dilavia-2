@@ -8,7 +8,6 @@ import { FavoritesProvider } from "@/entities/favorites/model/favoritesContext"
 import { FabricCartProvider } from "@/entities/fabric-cart/model/fabricCartContext"
 import { FabricFavoritesProvider } from "@/entities/fabric-favorites/model/fabricFavoritesContext"
 import { ThemeProvider } from "@/components/theme-provider"
-import { Toaster } from "@/components/ui/toaster"
 import "./globals.css"
 
 const inter = Inter({ subsets: ["latin", "cyrillic"] })
@@ -45,7 +44,6 @@ export default function RootLayout({
               </FabricCartProvider>
             </FavoritesProvider>
           </CartProvider>
-          <Toaster />
         </ThemeProvider>
       </body>
     </html>

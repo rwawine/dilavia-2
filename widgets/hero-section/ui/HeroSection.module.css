@@ -14,7 +14,7 @@
   max-width: 1400px;
   width: 100%;
   margin: 0 auto;
-  padding: 0 0 40px 0;
+  padding: 0 0 15px 0;
   overflow: visible !important;
   opacity: 0;
   transition: opacity 0.3s ease;
@@ -26,6 +26,14 @@
 
 .sliderContainer :global(.swiper-pagination) {
   bottom: -20px !important;
+  height: 15px !important;
+}
+
+.sliderContainer :global(.swiper-pagination-bullets-dynamic) {
+  height: 15px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .sliderContainer :global(.swiper-pagination-bullet) {
@@ -93,20 +101,11 @@
   gap: 8px;
 }
 
-.subtitle {
-  font-size: 28px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: #fff;
-}
-
 .title {
   font-size: 56px;
-  font-weight: 900;
+  font-weight: 600;
   line-height: 1;
   margin: 0;
-  text-transform: uppercase;
   letter-spacing: 1px;
   color: #fff;
   display: flex;
