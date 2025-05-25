@@ -27,7 +27,6 @@ export const useFilterTypes = (fabrics: Fabric[] = []): FilterType[] => {
     const filterTypes = new Set<string>()
     
     if (!fabrics?.length) {
-      console.log('No fabrics data') // Отладочный вывод
       return []
     }
 
@@ -36,7 +35,6 @@ export const useFilterTypes = (fabrics: Fabric[] = []): FilterType[] => {
       if (fabric.collections) {
         fabric.collections.forEach((collection: Collection) => {
           if (collection.filterType) {
-            console.log('Found filterType:', collection.filterType) // Отладочный вывод
             filterTypes.add(collection.filterType)
           }
         })

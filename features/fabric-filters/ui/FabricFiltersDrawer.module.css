@@ -191,6 +191,7 @@
 
 .filterActions {
   display: flex;
+  flex-direction: column;
   gap: 1rem;
   margin-top: 2rem;
 }
@@ -255,6 +256,22 @@
 .resultsCount {
   font-size: 0.9rem;
   color: #6c757d;
+}
+
+.showMoreButton {
+  background: none;
+  border: none;
+  color: var(--accent-color);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 8px 0;
+  width: 100%;
+  text-align: left;
+  transition: color 0.2s ease;
+}
+
+.showMoreButton:hover {
+  color: orange;
 }
 
 @media (max-width: 768px) {

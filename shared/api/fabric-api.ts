@@ -178,7 +178,6 @@ export async function getFabricCategories(): Promise<FabricCategory[]> {
     return data[0].categories || []
   } catch (error) {
     console.error("Error fetching fabric categories:", error)
-    console.log("Using fallback data instead")
 
     // Use fallback data if API fetch fails
     return FALLBACK_DATA[0].categories || []

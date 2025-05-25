@@ -234,7 +234,7 @@ export default function FabricDetail({ category, collection, similarCollections,
                       <span className={styles.colorVariantName}>{variant.color.ru}</span>
                       <div
                         className={styles.colorSwatch}
-                        style={{ backgroundColor: variant.color.hex || "#ccc" }}
+                        style={{ backgroundColor: variant.color.ru || "#ccc" }}
                       ></div>
                     </div>
                   </button>
@@ -278,7 +278,7 @@ export default function FabricDetail({ category, collection, similarCollections,
               <div className={styles.selectedColorInfo}>
                 <div
                   className={styles.selectedColorSwatch}
-                  style={{ backgroundColor: selectedVariant.color.hex || "#ccc" }}
+                  style={{ backgroundColor: selectedVariant.color.ru || "#ccc" }}
                 ></div>
                 <div className={styles.selectedColorDetails}>
                   <h3 className={styles.selectedColorTitle}>Выбранный цвет</h3>
@@ -317,7 +317,7 @@ export default function FabricDetail({ category, collection, similarCollections,
                 className={isVariantInFavorites ? styles.filledHeart : ""}
                 fill={isVariantInFavorites ? "currentColor" : "none"}
               />
-              <span>{isVariantInFavorites ? "В избранном" : "В избранное"}</span>
+              <span>{isVariantInFavorites ? "" : ""}</span>
             </Button>
           </div>
 
@@ -368,6 +368,10 @@ export default function FabricDetail({ category, collection, similarCollections,
                   {Object.entries(collection.technicalSpecifications).map(([key, value]) => {
                     // Skip application areas as they're arrays and null values
                     if (key === "applicationAreas_ru" || !value) return null
+
+                    // Skip non-Russian fields if Russian version exists
+                    if (key === "origin" && collection.technicalSpecifications.origin_ru) return null
+                    if (key === "composition" && collection.technicalSpecifications.composition_ru) return null
 
                     // Format the key for display
                     let displayKey = key
@@ -424,15 +428,6 @@ export default function FabricDetail({ category, collection, similarCollections,
               )}
             </TabsContent>
           </Tabs>
-
-          <div className={styles.requestSampleSection}>
-            <Button variant="outline" className={styles.requestSampleButton}>
-              Заказать образец ткани
-            </Button>
-            <p className={styles.requestSampleInfo}>
-              Закажите бесплатный образец ткани, чтобы оценить качество материала перед покупкой
-            </p>
-          </div>
         </div>
       </div>
 

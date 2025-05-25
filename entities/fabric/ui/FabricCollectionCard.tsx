@@ -7,7 +7,7 @@ import type { FabricCollection } from "@/shared/api/types"
 import styles from "./FabricCollectionCard.module.css"
 
 interface FabricCollectionCardProps {
-  categoryName: string // Changed from category object to just the category name
+  categoryName: string
   collection: FabricCollection
   className?: string
 }
@@ -21,11 +21,16 @@ export const FabricCollectionCard = ({ categoryName, collection, className = "" 
   const collectionType = collection?.type || ""
   const collectionAvailability = collection?.availability || ""
 
-  // Get the first variant image as the collection thumbnail, using direct path from JSON
+  // Get the first variant image as the collection thumbnail
   const thumbnailImage =
     collection?.variants && collection.variants.length > 0
-      ? collection.variants[0].image // Используем путь напрямую из JSON
-      : `/placeholder.svg?height=300&width=300&query=${collectionNameRu}%20fabric`
+      ? collection.variants[0].image
+      : `/placeholder.svg?height=300&width=300&query=${encodeURIComponent(collectionNameRu)}%20fabric`
+
+  // Format availability text
+  const formattedAvailability = collectionAvailability === "В наличии" 
+    ? "В наличии" 
+    : collectionAvailability
 
   return (
     <Link
@@ -41,6 +46,7 @@ export const FabricCollectionCard = ({ categoryName, collection, className = "" 
           width={300}
           height={300}
           className={styles.image}
+          priority={false}
         />
         <div className={`${styles.overlay} ${isHovered ? styles.visible : ""}`}>
           <span className={styles.viewDetails}>Посмотреть детали</span>
@@ -48,8 +54,10 @@ export const FabricCollectionCard = ({ categoryName, collection, className = "" 
       </div>
       <div className={styles.content}>
         <h3 className={styles.title}>{collectionNameRu}</h3>
-        <div className={styles.type}>{collectionType}</div>
-        <div className={styles.availability}>{collectionAvailability}</div>
+        {collectionType && <div className={styles.type}>{collectionType}</div>}
+        {collectionAvailability && (
+          <div className={styles.availability}>{formattedAvailability}</div>
+        )}
       </div>
     </Link>
   )

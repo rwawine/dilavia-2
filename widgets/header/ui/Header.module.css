@@ -49,7 +49,7 @@
 }
 
 .navLink:hover {
-  color: var(--accent-color);
+  color: orange;
 }
 
 .actions {
@@ -359,31 +359,35 @@
 .catalogButton {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   padding: 8px 12px;
   background: none;
   border: none;
-  color: inherit;
-  font: inherit;
-  font-weight: 500;
   cursor: pointer;
-  transition: color 0.2s;
+  color: var(--text-primary);
+  font-size: 16px;
+  font-weight: 500;
+  transition: all 0.2s;
 }
 
-.catalogButton:hover {
-  color: var(--accent-color);
+.catalogWrapper:hover .catalogButton {
+  color: orange;
+}
+
+.catalogWrapper:hover .catalogArrow {
+  transform: rotate(180deg);
 }
 
 .catalogButton.active {
-  color: var(--accent-color);
-}
-
-.catalogArrow {
-  transition: transform 0.2s;
+  color: orange;
 }
 
 .catalogButton.active .catalogArrow {
   transform: rotate(180deg);
+}
+
+.catalogArrow {
+  transition: transform 0.2s;
 }
 
 .catalogDropdown {
@@ -391,68 +395,47 @@
   top: 100%;
   left: 0;
   min-width: 200px;
-  background: white;
+  background: #fff;
+  border: 1px solid var(--border-color);
   border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  padding: 0;
+  padding: 8px 0;
   z-index: 1000;
-  animation: dropdownAppear 0.2s ease;
+  display: none;
 }
 
-@keyframes dropdownAppear {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.catalogDropdown.active {
+  display: block;
 }
 
 .categoryLink {
   display: block;
-  padding: 8px 16px;
-  color: #333;
-  border-radius: 10px;
+  padding: 8px 12px;
+  color: var(--text-primary);
   text-decoration: none;
   transition: all 0.2s;
 }
 
 .categoryLink:hover {
-  background: #f5f5f5;
-  color: #007AFF;
+  color: orange;
+}
+
+/* Desktop styles */
+@media (min-width: 1024px) {
+  .catalogWrapper:hover .catalogDropdown {
+    display: block;
+  }
+
+  .catalogDropdown {
+    display: none;
+  }
 }
 
 /* Mobile styles */
-@media (max-width: 768px) {
+@media (max-width: 1023px) {
   .catalogDropdown {
     position: static;
-    box-shadow: none;
-    border-radius: 0;
-    background: transparent;
-    padding: 0;
-    margin-left: 16px;
-    animation: none;
-  }
-
-  .categoryLink {
-    padding: 12px 16px;
-    border-radius: 8px;
-  }
-
-  .categoryLink:hover {
-    background: rgba(0, 122, 255, 0.1);
-  }
-
-  .catalogButton {
-    width: 100%;
-    justify-content: space-between;
-    padding: 12px 16px;
-    border-radius: 8px;
-  }
-
-  .catalogButton:hover {
-    background: rgba(0, 122, 255, 0.1);
+    border: none;
+    padding: 8px 0;
+    margin-top: 8px;
   }
 }

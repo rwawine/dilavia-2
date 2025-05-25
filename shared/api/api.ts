@@ -7,7 +7,6 @@ const API_BASE_URL = "https://66d77b122c6b09c7.mokky.dev"
 // Helper function to log detailed fetch errors
 async function fetchWithErrorHandling<T>(url: string, errorMessage: string): Promise<T> {
   try {
-    console.log(`Fetching from: ${url}`)
     const response = await fetch(url, {
       method: "GET",
       headers: {
@@ -16,7 +15,6 @@ async function fetchWithErrorHandling<T>(url: string, errorMessage: string): Pro
       },
     })
 
-    console.log(`Response status: ${response.status}`)
 
     if (!response.ok) {
       const errorText = await response.text()
@@ -25,7 +23,6 @@ async function fetchWithErrorHandling<T>(url: string, errorMessage: string): Pro
     }
 
     const data = await response.json()
-    console.log(`Data received:`, data)
     return data
   } catch (error) {
     console.error(`${errorMessage}:`, error)
@@ -121,7 +118,6 @@ export async function getKidsBeds(): Promise<KidsBedData[]> {
       }
     }
 
-    console.log(`Processed ${processedKidsBeds.length} kids beds`)
     return processedKidsBeds
   } catch (error) {
     console.error("Error in getKidsBeds:", error)
@@ -132,14 +128,8 @@ export async function getKidsBeds(): Promise<KidsBedData[]> {
 export async function getKidsBedBySlug(slug: string): Promise<KidsBedData | null> {
   try {
     const kidsBeds = await getKidsBeds()
-    console.log(`Looking for kids bed with slug: ${slug}`)
-    console.log(
-      `Available kids bed slugs:`,
-      kidsBeds.map((bed) => bed.slug),
-    )
     return kidsBeds.find((bed) => bed.slug === slug) || null
   } catch (error) {
-    console.error("Error fetching kids bed by slug:", error)
     return null
   }
 }
@@ -341,7 +331,6 @@ export async function getPopularProducts(limit = 8): Promise<ProductData[]> {
     const [sofas, beds, armchairs, kidsBeds] = await Promise.all([getSofas(), getBeds(), getArmchairs(), getKidsBeds()])
 
     const allProducts = [...sofas, ...beds, ...armchairs, ...kidsBeds]
-    console.log(`Total products for popularity filtering: ${allProducts.length}`)
 
     // Filter products with popularity > 4.5 and sort by popularity
     const popularProducts = allProducts
@@ -349,17 +338,14 @@ export async function getPopularProducts(limit = 8): Promise<ProductData[]> {
       .sort((a, b) => b.popularity - a.popularity)
       .slice(0, limit)
 
-    console.log(`Popular products found: ${popularProducts.length}`)
     return popularProducts
   } catch (error) {
-    console.error("Error fetching popular products:", error)
     return []
   }
 }
 
 export async function getProductsByCategory(category: string): Promise<ProductData[]> {
   try {
-    console.log(`Fetching products for category: ${category}`)
 
     if (category === "sofa") {
       return await getSofas()
@@ -379,12 +365,8 @@ export async function getProductsByCategory(category: string): Promise<ProductDa
           getKidsBeds(),
         ])
 
-        console.log(
-          `All products count: sofas=${sofas.length}, beds=${beds.length}, armchairs=${armchairs.length}, kids=${kidsBeds.length}`,
-        )
         return [...sofas, ...beds, ...armchairs, ...kidsBeds]
       } catch (error) {
-        console.error("Error fetching all products:", error)
         const [sofas, beds] = await Promise.all([getSofas(), getBeds()])
         return [...sofas, ...beds]
       }
@@ -528,14 +510,12 @@ export async function getPriceRange(): Promise<{ min: number; max: number }> {
     const [sofas, beds, armchairs, kidsBeds] = await Promise.all([getSofas(), getBeds(), getArmchairs(), getKidsBeds()])
 
     const allProducts = [...sofas, ...beds, ...armchairs, ...kidsBeds]
-    console.log(`Total products for price range calculation: ${allProducts.length}`)
 
     // Filter out products with invalid price structure
     const validProducts = allProducts.filter(
       (product) => product && product.price && typeof product.price.current === "number",
     )
 
-    console.log(`Valid products with price data: ${validProducts.length}`)
 
     if (validProducts.length === 0) {
       console.warn("No valid products found for price range calculation")
@@ -546,7 +526,6 @@ export async function getPriceRange(): Promise<{ min: number; max: number }> {
     const min = Math.min(...prices)
     const max = Math.max(...prices)
 
-    console.log(`Price range calculated: min=${min}, max=${max}`)
     return { min, max }
   } catch (error) {
     console.error("Error fetching price range:", error)

@@ -14,7 +14,7 @@ export interface ProductData {
   images: string[]
   popularity: number
   inStock?: boolean
-  colors?: string[]
+  colors: string[]
   material?: string
   dimensions?: {
     width: number
@@ -22,8 +22,12 @@ export interface ProductData {
     depth: number
   }
   category: string
+  "subcategory-ru"?: string
   availability?: string
   manufacturing?: string
+  type?: string
+  size?: string
+  features?: string[]
 }
 
 export interface SofaData extends ProductData {
@@ -169,6 +173,7 @@ export interface FabricCartItem {
   collectionNameRu: string
   variant: FabricVariant
   quantity: number
+  price: number
 }
 
 export interface FabricFavoriteItem {
@@ -178,4 +183,5 @@ export interface FabricFavoriteItem {
   collectionName: string
   collectionNameRu: string
   variant: FabricVariant
+  availability: string
 }

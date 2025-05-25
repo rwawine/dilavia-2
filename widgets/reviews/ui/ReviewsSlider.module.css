@@ -44,7 +44,6 @@
 
 .reviewCard {
   background-color: white;
-  border: 1px solid var(--accent-color);
   border-radius: var(--radius-lg);
   padding: var(--spacing-lg);
   transition: transform 0.3s ease, box-shadow 0.3s ease;

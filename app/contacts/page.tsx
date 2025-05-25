@@ -1,10 +1,13 @@
 import type { Metadata } from "next"
 import styles from "./page.module.css"
+import dynamic from "next/dynamic"
 
 export const metadata: Metadata = {
   title: "Контакты",
   description: "Контактная информация мебельного магазина",
 }
+
+const ContactForm = dynamic(() => import("@/entities/contact/ui/ContactForm"), { ssr: false })
 
 export default function ContactsPage() {
   return (
@@ -57,6 +60,8 @@ export default function ContactsPage() {
           ></iframe>
         </div>
       </div>
+
+      <ContactForm />
     </div>
   )
 }

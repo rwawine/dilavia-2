@@ -50,6 +50,7 @@ export const FabricFiltersDrawer = ({
   const [maxAbrasion, setMaxAbrasion] = useState<number>(initialMaxAbrasion)
   const [selectedAvailabilities, setSelectedAvailabilities] = useState<string[]>(initialAvailabilities)
   const [filtersChanged, setFiltersChanged] = useState(false)
+  const [showAllCollections, setShowAllCollections] = useState(false)
 
   // Добавить новое состояние для хранения количества коллекций, соответствующих фильтрам
   const [filteredCount, setFilteredCount] = useState<number | null>(null)
@@ -372,7 +373,7 @@ export const FabricFiltersDrawer = ({
             <div className={styles.filterGroup}>
               <h3 className={styles.filterGroupTitle}>Коллекция</h3>
               <div className={styles.filterOptions}>
-                {collections.map((collection) => (
+                {collections.slice(0, showAllCollections ? collections.length : 7).map((collection) => (
                   <label key={collection} className={styles.filterOption}>
                     <input
                       type="checkbox"
@@ -384,25 +385,14 @@ export const FabricFiltersDrawer = ({
                   </label>
                 ))}
               </div>
-            </div>
-          )}
-
-          {types && types.length > 0 && (
-            <div className={styles.filterGroup}>
-              <h3 className={styles.filterGroupTitle}>Тип ткани</h3>
-              <div className={styles.filterOptions}>
-                {types.map((type) => (
-                  <label key={type} className={styles.filterOption}>
-                    <input
-                      type="checkbox"
-                      checked={selectedTypes.includes(type)}
-                      onChange={(e) => handleTypeChange(type, e.target.checked)}
-                      className={styles.filterInput}
-                    />
-                    <span className={styles.filterLabel}>{type}</span>
-                  </label>
-                ))}
-              </div>
+              {collections.length > 7 && (
+                <button
+                  className={styles.showMoreButton}
+                  onClick={() => setShowAllCollections(!showAllCollections)}
+                >
+                  {showAllCollections ? "Показать меньше" : "Показать еще"}
+                </button>
+              )}
             </div>
           )}
 
@@ -461,17 +451,17 @@ export const FabricFiltersDrawer = ({
           )}
 
           <div className={styles.filterActions}>
-            <Button variant="outline" size="sm" onClick={resetFilters} className={styles.resetButton}>
-              Сбросить
-            </Button>
             <Button
               variant="primary"
-              size="sm"
+              size="md"
               onClick={applyFilters}
               className={styles.applyButton}
               disabled={!filtersChanged}
             >
               {isLoading ? "Загрузка..." : <>Применить {filteredCount !== null ? `(${filteredCount})` : ""}</>}
+            </Button>
+            <Button variant="outline" size="md" onClick={resetFilters} className={styles.resetButton}>
+              Сбросить
             </Button>
           </div>
         </div>

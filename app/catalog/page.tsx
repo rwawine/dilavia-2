@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { useSearchParams } from "next/navigation"
 import ProductCard from "@/entities/product/ui/ProductCard"
 import Button from "@/shared/ui/button/Button"
@@ -9,6 +9,8 @@ import Input from "@/shared/ui/input/Input"
 import { getProductsByFilters, getPriceRange, getSortedProducts, getAvailableFilters } from "@/shared/api/api"
 import type { ProductData } from "@/shared/api/types"
 import styles from "./page.module.css"
+
+const PAGE_SIZE = 16
 
 export default function CatalogPage() {
   const searchParams = useSearchParams()
@@ -19,6 +21,7 @@ export default function CatalogPage() {
   const initialMaxPrice = searchParams.get("maxPrice") ? Number(searchParams.get("maxPrice")) : undefined
   const initialColors = searchParams.get("colors") ? searchParams.get("colors")!.split(",") : []
   const initialSortBy = searchParams.get("sort") || "popularity"
+  const initialSofaTypes = searchParams.get("sofaTypes") ? searchParams.get("sofaTypes")!.split(",") : []
 
   // State for products and filters
   const [products, setProducts] = useState<ProductData[]>([])
@@ -49,8 +52,27 @@ export default function CatalogPage() {
   const [filtersChanged, setFiltersChanged] = useState(false)
   const [filteredCount, setFilteredCount] = useState<number | null>(null)
 
+  // Add new state for dynamic filters
+  const [dynamicFilters, setDynamicFilters] = useState<{
+    subcategories?: string[];
+  }>({
+    subcategories: initialSofaTypes
+  });
+
+  // Add new state for pending dynamic filters
+  const [pendingDynamicFilters, setPendingDynamicFilters] = useState<{
+    subcategories?: string[];
+  }>({
+    subcategories: initialSofaTypes
+  });
+
   const filterDrawerRef = useRef<HTMLDivElement>(null)
   const filterOverlayRef = useRef<HTMLDivElement>(null)
+
+  // --- Infinite scroll state ---
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
+  const [isFetchingMore, setIsFetchingMore] = useState(false)
+  const loaderRef = useRef<HTMLDivElement | null>(null)
 
   // Load available filter options
   useEffect(() => {
@@ -64,6 +86,24 @@ export default function CatalogPage() {
 
     loadFilterOptions()
   }, [])
+
+  // Function to analyze products and extract unique filter values
+  const analyzeProductsForFilters = (products: ProductData[]) => {
+    const filters = {
+      subcategories: new Set<string>(),
+    };
+
+    // Only analyze sofa products for subcategories
+    products.forEach(product => {
+      if (product.category === 'sofa' && 'subcategory-ru' in product) {
+        filters.subcategories.add((product as any)['subcategory-ru']);
+      }
+    });
+
+    return {
+      subcategories: Array.from(filters.subcategories),
+    };
+  };
 
   // Load products and filter options
   useEffect(() => {
@@ -99,6 +139,23 @@ export default function CatalogPage() {
           console.error("Failed to get filtered products:", error)
           return [] // Return empty array on error
         })
+
+        // Analyze products for dynamic filters
+        const newDynamicFilters = analyzeProductsForFilters(filteredProducts);
+        setDynamicFilters(newDynamicFilters);
+
+        // Apply sofa subcategory filters only to sofas
+        if (activeCategories.includes('sofa') && dynamicFilters.subcategories?.length) {
+          filteredProducts = filteredProducts.filter(product => {
+            // If it's a sofa, apply subcategory filter
+            if (product.category === 'sofa') {
+              return 'subcategory-ru' in product && 
+                dynamicFilters.subcategories?.includes((product as any)['subcategory-ru']);
+            }
+            // For other categories, keep the product
+            return true;
+          });
+        }
 
         // Sort products
         filteredProducts = await getSortedProducts(filteredProducts, sortBy)
@@ -146,6 +203,13 @@ export default function CatalogPage() {
       params.delete("colors")
     }
 
+    // Update or remove sofa types parameter
+    if (dynamicFilters.subcategories?.length) {
+      params.set("sofaTypes", dynamicFilters.subcategories.join(","))
+    } else {
+      params.delete("sofaTypes")
+    }
+
     // Update or remove sort parameter
     if (sortBy !== "popularity") {
       params.set("sort", sortBy)
@@ -156,7 +220,7 @@ export default function CatalogPage() {
     // Update URL without refreshing the page using history API
     const newUrl = params.toString() ? `?${params.toString()}` : window.location.pathname
     window.history.replaceState({}, "", newUrl)
-  }, [activeCategories, minPrice, maxPrice, activeColors, priceRange, sortBy])
+  }, [activeCategories, minPrice, maxPrice, activeColors, priceRange, sortBy, dynamicFilters])
 
   // Close drawer when clicking outside
   useEffect(() => {
@@ -197,7 +261,7 @@ export default function CatalogPage() {
     } else {
       setFilteredCount(null)
     }
-  }, [pendingCategories, pendingMinPrice, pendingMaxPrice, pendingColors, filtersChanged])
+  }, [pendingCategories, pendingMinPrice, pendingMaxPrice, pendingColors, pendingDynamicFilters, filtersChanged])
 
   // Check filtered count
   const checkFilteredCount = async () => {
@@ -211,7 +275,21 @@ export default function CatalogPage() {
         colors: pendingColors.length > 0 ? pendingColors : undefined,
       })
 
-      setFilteredCount(filteredProducts.length)
+      // Apply sofa subcategory filters only to sofas
+      let finalProducts = filteredProducts;
+      if (pendingCategories.includes('sofa') && pendingDynamicFilters.subcategories?.length) {
+        finalProducts = filteredProducts.filter(product => {
+          // If it's a sofa, apply subcategory filter
+          if (product.category === 'sofa') {
+            return 'subcategory-ru' in product && 
+              pendingDynamicFilters.subcategories?.includes((product as any)['subcategory-ru']);
+          }
+          // For other categories, keep the product
+          return true;
+        });
+      }
+
+      setFilteredCount(finalProducts.length)
     } catch (error) {
       console.error("Error checking filtered count:", error)
       setFilteredCount(null)
@@ -225,6 +303,8 @@ export default function CatalogPage() {
     if (category === "all") {
       // If "all" is selected, clear other selections
       newCategories = ["all"]
+      // Clear sofa type filters when selecting "all"
+      setPendingDynamicFilters({})
     } else {
       // If a specific category is selected
       if (pendingCategories.includes(category)) {
@@ -233,6 +313,8 @@ export default function CatalogPage() {
         // If no categories left, select "all"
         if (newCategories.length === 0 || (newCategories.length === 1 && newCategories[0] === "all")) {
           newCategories = ["all"]
+          // Clear sofa type filters when selecting "all"
+          setPendingDynamicFilters({})
         } else {
           // Remove "all" if it's in the selection
           newCategories = newCategories.filter((c) => c !== "all")
@@ -270,12 +352,29 @@ export default function CatalogPage() {
     setFiltersChanged(true)
   }
 
+  // Handle dynamic filter change
+  const handleDynamicFilterChange = (filterType: string, value: string, checked: boolean) => {
+    setPendingDynamicFilters(prev => {
+      const currentValues = prev[filterType as keyof typeof prev] || [];
+      const newValues = checked 
+        ? [...currentValues, value]
+        : currentValues.filter(v => v !== value);
+      
+      return {
+        ...prev,
+        [filterType]: newValues
+      };
+    });
+    setFiltersChanged(true);
+  };
+
   // Apply filters
   const applyFilters = () => {
     setActiveCategories(pendingCategories)
     setMinPrice(pendingMinPrice)
     setMaxPrice(pendingMaxPrice)
     setActiveColors(pendingColors)
+    setDynamicFilters(pendingDynamicFilters)
     setFiltersChanged(false)
     setIsFiltersOpen(false)
   }
@@ -291,6 +390,7 @@ export default function CatalogPage() {
     setPendingMinPrice(priceRange.min)
     setPendingMaxPrice(priceRange.max)
     setPendingColors([])
+    setPendingDynamicFilters({})
     setFiltersChanged(true)
   }
 
@@ -304,9 +404,35 @@ export default function CatalogPage() {
       setPendingMinPrice(minPrice)
       setPendingMaxPrice(maxPrice)
       setPendingColors(activeColors)
+      setPendingDynamicFilters(dynamicFilters)
       setFiltersChanged(false)
     }
   }
+
+  // Сброс visibleCount при смене фильтров/сортировки
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE)
+  }, [activeCategories, minPrice, maxPrice, activeColors, sortBy, dynamicFilters])
+
+  // Intersection Observer для подгрузки
+  useEffect(() => {
+    if (!loaderRef.current) return
+    if (products.length <= visibleCount) return
+    let observer: IntersectionObserver | null = null
+    observer = new window.IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        setIsFetchingMore(true)
+        setTimeout(() => {
+          setVisibleCount((prev) => Math.min(prev + PAGE_SIZE, products.length))
+          setIsFetchingMore(false)
+        }, 400) // имитация задержки
+      }
+    }, { threshold: 1 })
+    observer.observe(loaderRef.current)
+    return () => {
+      if (observer && loaderRef.current) observer.unobserve(loaderRef.current)
+    }
+  }, [products.length, visibleCount])
 
   return (
     <div className="container">
@@ -427,19 +553,47 @@ export default function CatalogPage() {
             </div>
           )}
 
+          {/* Dynamic Filters */}
+          {Object.entries(dynamicFilters).map(([filterType, values]) => {
+            // Skip if no values or if it's sofa filters and sofa category is not selected
+            if (values.length === 0) return null;
+            if (filterType === 'subcategories' && !pendingCategories.includes('sofa')) return null;
+            
+            return (
+              <div key={filterType} className={styles.filterSection}>
+                <h3 className={styles.filterTitle}>
+                  {filterType === 'subcategories' ? 'Тип дивана' : filterType}
+                </h3>
+                <div className={styles.dynamicFilterOptions}>
+                  {values.map(value => (
+                    <label key={value} className={styles.dynamicFilterOption}>
+                      <input
+                        type="checkbox"
+                        checked={pendingDynamicFilters[filterType as keyof typeof pendingDynamicFilters]?.includes(value)}
+                        onChange={(e) => handleDynamicFilterChange(filterType, value, e.target.checked)}
+                        className={styles.dynamicFilterCheckbox}
+                      />
+                      <span className={styles.dynamicFilterName}>{value}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+
           {/* Filter Actions */}
           <div className={styles.filterActions}>
-            <Button variant="outline" size="sm" onClick={handleResetFilters} className={styles.resetButton}>
-              Сбросить фильтры
-            </Button>
             <Button
               variant="primary"
-              size="sm"
+              size="md"
               onClick={applyFilters}
               className={styles.applyButton}
               disabled={!filtersChanged}
             >
               Применить {filteredCount !== null ? `(${filteredCount})` : ""}
+            </Button>
+            <Button variant="outline" size="md" onClick={handleResetFilters} className={styles.resetButton}>
+              Сбросить фильтры
             </Button>
           </div>
         </div>
@@ -457,11 +611,19 @@ export default function CatalogPage() {
               <p>Загрузка товаров...</p>
             </div>
           ) : products.length > 0 ? (
-            <div className={styles.productGrid}>
-              {products.map((product) => (
-                <ProductCard key={product.id} product={product} showOptions={true} />
-              ))}
-            </div>
+            <>
+              <div className={styles.productGrid}>
+                {products.slice(0, visibleCount).map((product) => (
+                  <ProductCard key={product.id} product={product} showOptions={true} />
+                ))}
+              </div>
+              {/* Лоадер и ref для подгрузки */}
+              {visibleCount < products.length && (
+                <div ref={loaderRef} style={{ minHeight: 40, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                  {isFetchingMore && <div className={styles.spinner} />}
+                </div>
+              )}
+            </>
           ) : (
             <div className={styles.noProducts}>
               <p>По вашему запросу ничего не найдено.</p>

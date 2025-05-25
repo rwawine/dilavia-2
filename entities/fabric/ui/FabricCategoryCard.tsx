@@ -1,3 +1,6 @@
+"use client"
+
+import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import styles from "./FabricCategoryCard.module.css"
@@ -9,11 +12,18 @@ interface FabricCategoryCardProps {
 }
 
 export const FabricCategoryCard = ({ category, className = "" }: FabricCategoryCardProps) => {
+  const [isHovered, setIsHovered] = useState(false)
+
   // Получаем первое изображение из первой коллекции для превью категории
   const previewImage = category.collections[0]?.variants[0]?.image || "/assorted-fabrics.png"
 
   return (
-    <Link href={`/fabrics/${category.name.toLowerCase()}`} className={`${styles.card} ${className}`}>
+    <Link 
+      href={`/fabrics/${category.name.toLowerCase()}`} 
+      className={`${styles.card} ${className}`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       <div className={styles.imageContainer}>
         <Image
           src={previewImage || "/placeholder.svg"}
@@ -22,6 +32,9 @@ export const FabricCategoryCard = ({ category, className = "" }: FabricCategoryC
           height={300}
           className={styles.image}
         />
+        <div className={`${styles.overlay} ${isHovered ? styles.visible : ""}`}>
+          <span className={styles.viewDetails}>Посмотреть коллекции</span>
+        </div>
       </div>
       <div className={styles.content}>
         <h3 className={styles.title}>{category.name_ru}</h3>

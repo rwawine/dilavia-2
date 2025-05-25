@@ -1,9 +1,9 @@
 "use client"
 
 import type React from "react"
-
 import Link from "next/link"
-import { useState, useEffect } from "react"
+import Image from "next/image"
+import { useState, useEffect, useMemo, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { useCart } from "@/entities/cart/model/cartContext"
 import { useFavorites } from "@/entities/favorites/model/favoritesContext"
@@ -26,13 +26,10 @@ export default function ProductCard({ product, showOptions = false, className = 
   const [selectedSize, setSelectedSize] = useState(0)
   const [withMechanism, setWithMechanism] = useState(false)
   const [showSizeSelector, setShowSizeSelector] = useState(false)
+  const [isHovered, setIsHovered] = useState(false)
 
-  // Check if product is in favorites
-  const isInFavorites = favoritesState.items.some((item) => item.id === product.id)
-  const [isFavorited, setIsFavorited] = useState(isInFavorites)
-
-  // Get sizes based on product type
-  const getSizes = () => {
+  // Memoize sizes calculation
+  const sizes = useMemo(() => {
     const isSofa = product.category === "sofa"
     const isBed = product.category === "bed"
     const isKidsBed = product.category === "kids"
@@ -67,13 +64,12 @@ export default function ProductCard({ product, showOptions = false, className = 
       }))
     }
     return []
-  }
+  }, [product])
 
-  const sizes = getSizes()
   const hasSizes = sizes.length > 1
 
-  // Check if lifting mechanism is available for the selected size
-  const hasLiftingMechanism = () => {
+  // Memoize lifting mechanism check
+  const hasLiftingMechanism = useCallback(() => {
     const isBed = product.category === "bed"
     const isKidsBed = product.category === "kids"
 
@@ -99,32 +95,23 @@ export default function ProductCard({ product, showOptions = false, className = 
       )
     }
     return false
-  }
+  }, [product, selectedSize])
 
-  // Generate a unique ID for this product configuration
-  const getCartItemId = () => {
+  // Memoize cart item ID
+  const cartItemId = useMemo(() => {
     const size = sizes[selectedSize]
     const mechanismSuffix = hasLiftingMechanism() ? `-${withMechanism ? 'with-mechanism' : 'no-mechanism'}` : ''
     return `${product.id}-${size?.width}x${size?.length}${mechanismSuffix}`
-  }
+  }, [product.id, sizes, selectedSize, withMechanism, hasLiftingMechanism])
 
-  // Check if product is in cart
-  const isInCart = cartState.items.some((item) => item.id === getCartItemId())
-
-  // Update favorite state when context changes
-  useEffect(() => {
-    setIsFavorited(favoritesState.items.some((item) => item.id === product.id))
-  }, [favoritesState, product.id])
-
-  // Get price with selected options
-  const getPrice = () => {
+  // Memoize price calculation
+  const price = useMemo(() => {
     if (!sizes || sizes.length === 0) {
       return product.price.current
     }
 
-    let price = sizes[selectedSize].price
+    let totalPrice = sizes[selectedSize].price
 
-    // Add mechanism price for beds
     if (
       product.category === "bed" &&
       "bed" in product &&
@@ -133,10 +120,9 @@ export default function ProductCard({ product, showOptions = false, className = 
       Array.isArray((product as any).bed[selectedSize].lifting_mechanism) &&
       (product as any).bed[selectedSize].lifting_mechanism[1]
     ) {
-      price += (product as any).bed[selectedSize].lifting_mechanism[1].price
+      totalPrice += (product as any).bed[selectedSize].lifting_mechanism[1].price
     }
 
-    // Add mechanism price for kids beds
     if (
       product.category === "kids" &&
       withMechanism &&
@@ -147,15 +133,49 @@ export default function ProductCard({ product, showOptions = false, className = 
       (product as KidsBedData).specs!["kids-tables"]![selectedSize] &&
       Array.isArray((product as any).specs["kids-tables"][selectedSize].lifting_mechanism)
     ) {
-      price += (product as any).specs["kids-tables"][selectedSize].lifting_mechanism[1].price
+      totalPrice += (product as any).specs["kids-tables"][selectedSize].lifting_mechanism[1].price
     }
 
-    return price
-  }
+    return totalPrice
+  }, [product, sizes, selectedSize, withMechanism, hasLiftingMechanism])
 
-  const handleAddToCart = () => {
+  // Memoize favorite state
+  const isInFavorites = useMemo(
+    () => favoritesState.items.some((item) => item.id === product.id.toString()),
+    [favoritesState.items, product.id]
+  )
+  const [isFavorited, setIsFavorited] = useState(isInFavorites)
+
+  // Memoize cart state
+  const isInCart = useMemo(
+    () => cartState.items.some((item) => item.id === cartItemId),
+    [cartState.items, cartItemId]
+  )
+
+  // Memoize product URL
+  const productUrl = useMemo(() => {
+    const category = product.category || "sofa"
+    return `/products/${category}/${product.slug}`
+  }, [product.category, product.slug])
+
+  // Memoize main image
+  const mainImage = useMemo(() => {
+    if (product.images && product.images.length > 0) {
+      if (isHovered && product.images.length > 1) {
+        return product.images[1]
+      }
+      return product.images[0]
+    }
+    return "/assorted-living-room-furniture.png"
+  }, [product.images, isHovered])
+
+  // Update favorite state when context changes
+  useEffect(() => {
+    setIsFavorited(isInFavorites)
+  }, [isInFavorites])
+
+  const handleAddToCart = useCallback(() => {
     if (isInCart) {
-      // Navigate to cart if already in cart
       router.push("/cart")
       return
     }
@@ -163,65 +183,40 @@ export default function ProductCard({ product, showOptions = false, className = 
     cartDispatch({
       type: "ADD_TO_CART",
       payload: {
-        id: getCartItemId(),
+        id: cartItemId,
         product,
         quantity: 1,
         selectedSize: sizes[selectedSize] ?? null,
         withMechanism,
-        totalPrice: getPrice(),
+        totalPrice: price,
       },
     })
-  }
+  }, [isInCart, router, cartDispatch, cartItemId, product, sizes, selectedSize, withMechanism, price])
 
-  const handleToggleFavorite = () => {
+  const handleToggleFavorite = useCallback(() => {
     if (isFavorited) {
       favoritesDispatch({
         type: "REMOVE_FROM_FAVORITES",
-        payload: product.id,
+        payload: product.id.toString(),
       })
     } else {
       favoritesDispatch({
         type: "ADD_TO_FAVORITES",
         payload: {
-          id: product.id,
+          id: product.id.toString(),
           product,
         },
       })
     }
-  }
+  }, [isFavorited, favoritesDispatch, product])
 
-  const handleProductClick = () => {
-    // No need to add to recently viewed anymore
-  }
-
-  // Toggle size selector
-  const toggleSizeSelector = (e: React.MouseEvent) => {
+  const toggleSizeSelector = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
     if (hasSizes) {
-      setShowSizeSelector(!showSizeSelector)
+      setShowSizeSelector((prev) => !prev)
     }
-  }
-
-  // Determine the product URL based on category
-  const getProductUrl = () => {
-    const category = product.category || "sofa"
-    return `/products/${category}/${product.slug}`
-  }
-
-  // Get the main image or a placeholder
-  const getMainImage = (hovered: boolean = false) => {
-    if (product.images && product.images.length > 0) {
-      if (hovered && product.images.length > 1) {
-        return product.images[1]
-      }
-      return product.images[0]
-    }
-    return "/assorted-living-room-furniture.png"
-  }
-
-  // State for hover
-  const [isHovered, setIsHovered] = useState(false)
+  }, [hasSizes])
 
   return (
     <div
@@ -230,13 +225,16 @@ export default function ProductCard({ product, showOptions = false, className = 
       onMouseLeave={() => setIsHovered(false)}
     >
       <div className={styles.imageContainer}>
-        <Link href={getProductUrl()} onClick={handleProductClick} className={styles.imageLink}>
-          <img
-            src={getMainImage(isHovered) || "/placeholder.svg"}
+        <Link href={productUrl} className={styles.imageLink}>
+          <Image
+            src={mainImage}
             alt={product.name}
             className={styles.productImage}
             width={300}
             height={300}
+            loading="lazy"
+            quality={75}
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
         </Link>
         {product.price.old && (
@@ -267,11 +265,11 @@ export default function ProductCard({ product, showOptions = false, className = 
         </div>
       </div>
       <div className={styles.productInfo}>
-        <Link href={getProductUrl()} onClick={handleProductClick} className={styles.productLink}>
+        <Link href={productUrl} className={styles.productLink}>
           <h3 className={styles.productName}>{product.name}</h3>
         </Link>
         <div className={styles.priceContainer}>
-          <span className={styles.price}>{formatPrice(getPrice())} ₽</span>
+          <span className={styles.price}>{formatPrice(price)} ₽</span>
           {product.price.old && <span className={styles.oldPrice}>{formatPrice(product.price.old)} ₽</span>}
         </div>
 

@@ -11,7 +11,6 @@ export default async function HomePage() {
   return (
     <>
       <HeroSection />
-      <Categories />
       <PopularProducts products={popularProducts} />
       <PromoSection />
       <ReviewsSlider />

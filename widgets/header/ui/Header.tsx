@@ -19,6 +19,7 @@ const catalogCategories = [
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isCatalogOpen, setIsCatalogOpen] = useState(false)
+  const [isDesktopCatalogOpen, setIsDesktopCatalogOpen] = useState(false)
   const { state: cartState } = useCart()
   const { state: favoritesState } = useFavorites()
   const { state: fabricCartState } = useFabricCart()
@@ -67,13 +68,23 @@ export const Header = () => {
       ) {
         setIsCatalogOpen(false)
       }
+      // Desktop: close on click outside
+      if (
+        isDesktopCatalogOpen &&
+        catalogRef.current &&
+        desktopCatalogButtonRef.current &&
+        !catalogRef.current.contains(event.target as Node) &&
+        !desktopCatalogButtonRef.current.contains(event.target as Node)
+      ) {
+        setIsDesktopCatalogOpen(false)
+      }
     }
 
     document.addEventListener("mousedown", handleClickOutside)
     return () => {
       document.removeEventListener("mousedown", handleClickOutside)
     }
-  }, [isMenuOpen, isCatalogOpen])
+  }, [isMenuOpen, isCatalogOpen, isDesktopCatalogOpen])
 
   // Prevent body scroll when menu is open
   useEffect(() => {
@@ -142,44 +153,33 @@ export const Header = () => {
             <ul className={styles.navList}>
               <li className={styles.navItem}>
                 <div className={styles.catalogWrapper}>
-                  <button 
+                  <button
                     ref={mobileCatalogButtonRef}
                     className={`${styles.catalogButton} ${isCatalogOpen ? styles.active : ''}`}
                     onClick={toggleCatalog}
                     aria-expanded={isCatalogOpen}
+                    type="button"
                   >
                     Каталог
-                    <svg 
-                      className={styles.catalogArrow} 
-                      width="12" 
-                      height="12" 
-                      viewBox="0 0 24 24" 
-                      fill="none" 
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path 
-                        d="M6 9l6 6 6-6" 
-                        stroke="currentColor" 
-                        strokeWidth="2" 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round"
-                      />
+                    <svg className={styles.catalogArrow} width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </button>
-                  {isCatalogOpen && (
-                    <div className={styles.catalogDropdown} ref={catalogRef}>
-                      {catalogCategories.map((category) => (
-                        <a
-                          key={category.path}
-                          href={category.path}
-                          className={styles.categoryLink}
-                          onClick={() => setIsCatalogOpen(false)}
-                        >
-                          {category.name}
-                        </a>
-                      ))}
-                    </div>
-                  )}
+                  <div className={`${styles.catalogDropdown} ${isCatalogOpen ? styles.active : ''}`}>
+                    {catalogCategories.map((category) => (
+                      <a
+                        key={category.path}
+                        href={category.path}
+                        className={styles.categoryLink}
+                        onClick={() => {
+                          setIsCatalogOpen(false)
+                          setIsMenuOpen(false)
+                        }}
+                      >
+                        {category.name}
+                      </a>
+                    ))}
+                  </div>
                 </div>
               </li>
               <li className={styles.navItem}>
@@ -272,45 +272,39 @@ export const Header = () => {
         <nav className={styles.desktopNav}>
           <ul className={styles.navList}>
             <li className={styles.navItem}>
-              <div className={styles.catalogWrapper}>
-                <button 
-                  ref={desktopCatalogButtonRef}
-                  className={`${styles.catalogButton} ${isCatalogOpen ? styles.active : ''}`}
-                  onClick={toggleCatalog}
-                  aria-expanded={isCatalogOpen}
+              <div
+                className={styles.catalogWrapper}
+                onMouseEnter={() => setIsDesktopCatalogOpen(true)}
+                onMouseLeave={() => setIsDesktopCatalogOpen(false)}
+                onFocus={() => setIsDesktopCatalogOpen(true)}
+                onBlur={() => setIsDesktopCatalogOpen(false)}
+                tabIndex={-1}
+              >
+                <button
+                  className={styles.catalogButton}
+                  aria-haspopup="true"
+                  aria-expanded={isDesktopCatalogOpen}
+                  tabIndex={0}
+                  type="button"
+                  onClick={() => setIsDesktopCatalogOpen((v) => !v)}
+                  onFocus={() => setIsDesktopCatalogOpen(true)}
                 >
                   Каталог
-                  <svg 
-                    className={styles.catalogArrow} 
-                    width="12" 
-                    height="12" 
-                    viewBox="0 0 24 24" 
-                    fill="none" 
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path 
-                      d="M6 9l6 6 6-6" 
-                      stroke="currentColor" 
-                      strokeWidth="2" 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round"
-                    />
+                  <svg className={styles.catalogArrow} width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </button>
-                {isCatalogOpen && (
-                  <div className={styles.catalogDropdown} ref={catalogRef}>
-                    {catalogCategories.map((category) => (
-                      <a
-                        key={category.path}
-                        href={category.path}
-                        className={styles.categoryLink}
-                        onClick={() => setIsCatalogOpen(false)}
-                      >
-                        {category.name}
-                      </a>
-                    ))}
-                  </div>
-                )}
+                <div className={`${styles.catalogDropdown} ${isDesktopCatalogOpen ? styles.active : ''}`}>
+                  {catalogCategories.map((category) => (
+                    <a
+                      key={category.path}
+                      href={category.path}
+                      className={styles.categoryLink}
+                    >
+                      {category.name}
+                    </a>
+                  ))}
+                </div>
               </div>
             </li>
             <li className={styles.navItem}>

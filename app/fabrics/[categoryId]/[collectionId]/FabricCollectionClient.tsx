@@ -75,6 +75,7 @@ export default function FabricCollectionClient({
           collectionName: collectionId,
           collectionNameRu: collection.name_ru,
           variant,
+          availability: collection.availability,
         },
       })
     }

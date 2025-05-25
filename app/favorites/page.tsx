@@ -139,6 +139,7 @@ export default function FavoritesPage() {
                     collectionName={item.collectionName}
                     collectionNameRu={item.collectionNameRu}
                     variant={item.variant}
+                    availability={item.availability}
                   />
                 ))}
               </div>
