@@ -240,7 +240,9 @@ export default function ProductCard({ product, showOptions = false, className = 
             -{Math.round(((product.price.old - product.price.current) / product.price.old) * 100)}%
           </div>
         )}
-        {product.availability === "В наличии" && <div className={styles.inStockBadge}>В наличии</div>}
+        {product.availability === "В наличии" && (
+          <div className={styles.inStockBadge}>В наличии</div>
+        )}
         <div className={styles.productOptions}>
           <button
             className={`${styles.favoriteButton} ${isFavorited ? styles.favorited : ""}`}
@@ -331,7 +333,10 @@ export default function ProductCard({ product, showOptions = false, className = 
           </label>
         )}
 
-        <button className={`${styles.addToCartButton} ${isInCart ? styles.inCart : ""}`} onClick={handleAddToCart}>
+        <button
+          className={`${styles.addToCartButton} ${isInCart ? styles.inCart : ""}`}
+          onClick={handleAddToCart}
+        >
           {isInCart ? "В корзине" : "В корзину"}
         </button>
       </div>
