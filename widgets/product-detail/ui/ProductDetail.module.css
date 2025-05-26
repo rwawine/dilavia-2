@@ -874,3 +874,40 @@
     min-width: 80px;
   }
 }
+
+.mechanismCheckbox {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  transition: all 0.2s ease;
+  background-color: white;
+}
+
+.mechanismCheckbox:hover {
+  border-color: #4a6741;
+  background-color: #f9f9f9;
+}
+
+.mechanismCheckbox input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #4a6741;
+}
+
+.mechanismText {
+  font-size: 16px;
+  color: #333;
+  font-weight: 500;
+}
+
+.mechanismPriceDiff {
+  margin-left: auto;
+  color: #4a6741;
+  font-size: 16px;
+  font-weight: 600;
+}

@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect, useCallback } from "react"
 import { Heart, ShoppingCart, Check } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -36,8 +36,19 @@ interface FavoriteItem {
   product: ProductData
 }
 
+interface ProductSize {
+  width: number
+  length: number
+  height?: number | null
+  price: number
+  lifting_mechanism?: {
+    available: boolean
+    price: number
+  }[]
+}
+
 interface SofaSizes {
-  sofa: Size[]
+  sofa: ProductSize[]
   materials?: Material[]
   features?: string[]
   installment_plans?: InstallmentPlan[]
@@ -53,10 +64,29 @@ interface SofaSizes {
   }
 }
 
+interface BedSizes {
+  bed: ProductSize[]
+}
+
 interface ProductWithCategory extends ProductData {
   "category-ru"?: string
   subcategory?: string
   "subcategory-ru"?: string
+  bed?: ProductSize[]
+  "kids-tables"?: ProductSize[]
+  materials?: Material[]
+  features?: string[]
+  style?: string
+  color?: string
+  country?: string
+  warranty?: string
+  "commercial-offer"?: string
+  delivery?: {
+    available: boolean
+    cost: string
+    time: string
+  }
+  installment_plans?: InstallmentPlan[]
 }
 
 export const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts }) => {
@@ -67,6 +97,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProduc
   const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 })
   const [selectedSize, setSelectedSize] = useState<number>(0)
   const [withMechanism, setWithMechanism] = useState(false)
+  const [totalPrice, setTotalPrice] = useState(product.price.current)
 
   const imageRef = React.useRef<HTMLDivElement>(null)
   const mainImageRef = React.useRef<HTMLImageElement>(null)
@@ -74,19 +105,67 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProduc
   const { state: cartState, dispatch: cartDispatch } = useCart()
   const { state: favoritesState, dispatch: favoritesDispatch } = useFavorites()
 
-  const isSofa = product.category === "sofa"
-  const isBed = product.category === "bed"
-  const isKidsBed = product.category === "kids"
-
-  const getCartItemId = () => {
-    return `${product.id}-${selectedSize}-${withMechanism}`
+  const getSizes = (): ProductSize[] => {
+    if (isSofa && "sizes" in product && product.sizes?.sofa) {
+      return product.sizes.sofa
+    }
+    if (isBed && "bed" in product && product.bed) {
+      return product.bed
+    }
+    if (isKidsBed && "kids-tables" in product) {
+      const kidsTables = (product as ProductWithCategory)["kids-tables"]
+      if (kidsTables && Array.isArray(kidsTables)) {
+        return kidsTables
+      }
+    }
+    return []
   }
 
-  const isInCart = cartState.items.some((item) =>
-    item.product.id === product.id &&
-    (!isSofa || !("sizes" in product) || item.selectedSize === sizes[selectedSize]) &&
-    (!isSofa || !("sizes" in product) || item.withMechanism === withMechanism)
-  )
+  const isSofa = product.category === "sofa"
+  const isBed = product.category === "bed"
+  const isKidsBed = product.category === "kids-tables"
+
+  console.log('Product category:', {
+    category: product.category,
+    isSofa,
+    isBed,
+    isKidsBed,
+    sizes: getSizes()
+  })
+
+  const sizes = getSizes()
+
+  const getLiftingMechanism = useCallback(() => {
+    const isBed = product.category === "bed"
+    const isKidsBed = product.category === "kids-tables"
+
+    if (isBed && "bed" in product && Array.isArray((product as BedData).bed)) {
+      return (product as any).bed[selectedSize]?.lifting_mechanism
+    } else if (isKidsBed && "kids-tables" in product) {
+      return (product as any)["kids-tables"][selectedSize]?.lifting_mechanism
+    }
+    return null
+  }, [product, selectedSize])
+
+  const liftingMechanism = getLiftingMechanism()
+
+  const getCartItemId = () => {
+    if (!sizes || sizes.length === 0 || typeof selectedSize !== 'number' || selectedSize < 0 || selectedSize >= sizes.length) {
+      return product.id
+    }
+    const size = sizes[selectedSize]
+    const mechanismSuffix = withMechanism ? '-with-mechanism' : '-no-mechanism'
+    return `${product.id}-${size.width}x${size.length}${mechanismSuffix}`
+  }
+
+  const isInCart = cartState.items.some((item) => {
+    if (!sizes || sizes.length === 0 || typeof selectedSize !== 'number' || selectedSize < 0 || selectedSize >= sizes.length) {
+      return item.product.id === product.id
+    }
+    const size = sizes[selectedSize]
+    const itemId = getCartItemId()
+    return item.id === itemId
+  })
 
   const isFavorite = favoritesState.items.some((item: FavoriteItem) => item.id === product.id)
 
@@ -104,30 +183,38 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProduc
     setIsZoomed(!isZoomed)
   }
 
-  const getSizes = (): Size[] => {
-    if (isSofa && "sizes" in product && product.sizes?.sofa) {
-      return product.sizes.sofa
+  const getPrice = useCallback(() => {
+    let totalPrice = 0
+
+    if (product.category === "bed" && "bed" in product && Array.isArray((product as BedData).bed)) {
+      totalPrice = (product as any).bed[selectedSize]?.price || 0
+      if (withMechanism && (product as any).bed[selectedSize]?.lifting_mechanism?.[1]?.price) {
+        totalPrice += (product as any).bed[selectedSize].lifting_mechanism[1].price
+      }
+    } else if (product.category === "kids-tables" && "kids-tables" in product) {
+      totalPrice = (product as any)["kids-tables"][selectedSize]?.price || 0
+      if (withMechanism && (product as any)["kids-tables"][selectedSize]?.lifting_mechanism?.[1]?.price) {
+        totalPrice += (product as any)["kids-tables"][selectedSize].lifting_mechanism[1].price
+      }
+    } else {
+      totalPrice = product.price.current
     }
-    return []
-  }
 
-  const sizes = getSizes()
+    return totalPrice
+  }, [product, selectedSize, withMechanism])
 
-  const getPrice = () => {
-    if (!sizes || sizes.length === 0) {
-      return product.price.current
-    }
-
-    if (typeof selectedSize !== 'number' || selectedSize < 0 || selectedSize >= sizes.length) {
-      return product.price.current
-    }
-
-    return sizes[selectedSize].price
-  }
+  // Обновляем цену при изменении размера или механизма
+  useEffect(() => {
+    const newPrice = getPrice()
+    setTotalPrice(newPrice)
+  }, [selectedSize, withMechanism, isKidsBed, isBed])
 
   const getMaterials = () => {
     if (isSofa && "sizes" in product && (product.sizes as SofaSizes).materials) {
       return (product.sizes as SofaSizes).materials
+    }
+    if ((isBed || isKidsBed) && "materials" in product) {
+      return (product as ProductWithCategory).materials || []
     }
     return []
   }
@@ -138,6 +225,9 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProduc
     if (isSofa && "sizes" in product && (product.sizes as SofaSizes).features) {
       return (product.sizes as SofaSizes).features
     }
+    if ((isBed || isKidsBed) && "features" in product) {
+      return (product as ProductWithCategory).features || []
+    }
     return []
   }
 
@@ -147,6 +237,9 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProduc
     if (isSofa && "sizes" in product && (product.sizes as SofaSizes).installment_plans) {
       return (product.sizes as SofaSizes).installment_plans
     }
+    if ((isBed || isKidsBed) && "installment_plans" in product) {
+      return (product as ProductWithCategory).installment_plans || []
+    }
     return []
   }
 
@@ -155,21 +248,41 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProduc
   const images = product.images && product.images.length > 0 ? product.images : ["/placeholder.svg"]
   const availability = product.availability || "Под заказ"
   const manufacturing = product.manufacturing || "Уточняйте у менеджера"
-  const country = isSofa && "sizes" in product ? (product.sizes as SofaSizes).country : "Не указано"
-  const warranty = isSofa && "sizes" in product ? (product.sizes as SofaSizes).warranty : "Не указано"
-  const commercialOffer = isSofa && "sizes" in product ? (product.sizes as SofaSizes)["commercial-offer"] : null
-  const style = isSofa && "sizes" in product ? (product.sizes as SofaSizes).style : null
-  const delivery = isSofa && "sizes" in product ? (product.sizes as SofaSizes).delivery : null
+  const country = isSofa && "sizes" in product ? (product.sizes as SofaSizes).country : (product as ProductWithCategory).country || "Не указано"
+  const warranty = isSofa && "sizes" in product ? (product.sizes as SofaSizes).warranty : (product as ProductWithCategory).warranty || "Не указано"
+  const commercialOffer = isSofa && "sizes" in product ? (product.sizes as SofaSizes)["commercial-offer"] : (product as ProductWithCategory)["commercial-offer"] || null
+  const style = isSofa && "sizes" in product ? (product.sizes as SofaSizes).style : (product as ProductWithCategory).style || null
+  const delivery = isSofa && "sizes" in product ? (product.sizes as SofaSizes).delivery : (product as ProductWithCategory).delivery || null
 
   const handleAddToCart = () => {
+    if (!sizes || sizes.length === 0 || typeof selectedSize !== 'number' || selectedSize < 0 || selectedSize >= sizes.length) {
+      cartDispatch({
+        type: "ADD_TO_CART",
+        payload: {
+          id: product.id,
+          product,
+          quantity: 1,
+          selectedSize: null,
+          withMechanism: false,
+          totalPrice: product.price.current
+        }
+      })
+      return
+    }
+    const size = sizes[selectedSize]
+    const itemId = getCartItemId()
     cartDispatch({
       type: "ADD_TO_CART",
       payload: {
-        id: getCartItemId(),
+        id: itemId,
         product,
         quantity: 1,
-        selectedSize: sizes[selectedSize],
-        withMechanism: withMechanism,
+        selectedSize: {
+          width: size.width,
+          length: size.length,
+          price: size.price
+        },
+        withMechanism,
         totalPrice: getPrice()
       }
     })
@@ -231,7 +344,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProduc
     if (!category) return "/catalog"
 
     let link = `/catalog?category=${category}`
-    
+
     // For sofas, add sofaTypes parameter with all available types and selected type
     if (category === "sofa") {
       // Get all available sofa types from allProducts
@@ -244,7 +357,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProduc
       if (allSofaTypes) {
         // Add all available types to show in filters
         link += `&sofaTypes=${encodeURIComponent(allSofaTypes)}`
-        
+
         // Add selected type to filter
         if (subcategoryRu) {
           link += `&selectedSofaType=${encodeURIComponent(subcategoryRu)}`
@@ -374,11 +487,11 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProduc
 
             <div className={styles.priceBlock}>
               <div className={styles.priceDisplay}>
-                <span className={styles.currentPrice}>{formatPrice(getPrice())} ₽</span>
+                <span className={styles.currentPrice}>{formatPrice(totalPrice)} ₽</span>
                 {product.price.old && <span className={styles.oldPrice}>{formatPrice(product.price.old)} ₽</span>}
                 {product.price.old && (
                   <span className={styles.discount}>
-                    -{Math.round(((product.price.old - product.price.current) / product.price.old) * 100)}%
+                    -{Math.round(((product.price.old - totalPrice) / product.price.old) * 100)}%
                   </span>
                 )}
               </div>
@@ -397,7 +510,9 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProduc
                         className={`${styles.sizeOption} ${selectedSize === index ? styles.active : ""}`}
                         onClick={() => {
                           setSelectedSize(index)
-                          setWithMechanism(false)
+                          if (isSofa) {
+                            setWithMechanism(false)
+                          }
                         }}
                       >
                         <span className={styles.sizeText}>
@@ -411,6 +526,35 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProduc
                         )}
                       </button>
                     ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Lifting Mechanism Options */}
+              {liftingMechanism && liftingMechanism.length > 1 && liftingMechanism[1]?.available && (
+                <div className={styles.optionGroup}>
+                  <h3 className={styles.optionTitle}>Подъемный механизм:</h3>
+                  <div className={styles.mechanismOptions}>
+                    <label className={styles.mechanismCheckbox}>
+                      <input
+                        type="checkbox"
+                        checked={withMechanism}
+                        onChange={() => {
+                          setWithMechanism(!withMechanism)
+                          const newPrice = getPrice()
+                          setTotalPrice(newPrice)
+                        }}
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                      <span className={styles.mechanismText}>
+                        С подъемным механизмом
+                      </span>
+                      {liftingMechanism[1]?.price > 0 && (
+                        <span className={styles.mechanismPriceDiff}>
+                          +{formatPrice(liftingMechanism[1].price)} ₽
+                        </span>
+                      )}
+                    </label>
                   </div>
                 </div>
               )}

@@ -70,14 +70,28 @@ export interface KidsBedData extends ProductData {
       type?: string
       color?: string
     }>
-    sleepingPlace?: {
-      width: number | null
-      length: number | null
-    }
     features?: string[]
     style?: string
     color?: string | null
-    max_load?: number | null
+    country?: string
+    warranty?: string
+    delivery?: {
+      available: boolean
+      cost: string
+      time: string
+    }
+    installment_plans?: Array<{
+      bank: string
+      installment: {
+        duration_months: number
+        interest: string
+        additional_fees?: string
+      }
+      credit?: {
+        duration_months: number
+        interest: string
+      }
+    }>
   }
   "subcategory-ru"?: string
   "category-ru"?: string

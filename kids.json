@@ -1,0 +1,137 @@
+
+[
+    {
+      "id": "215",
+      "category": "kids-tables",
+      "subcategory": "kids-tables",
+      "subcategory-ru": "детская кровать",
+      "category-ru": "детская кровать",
+      "name": "детская кровать  15",
+      "slug": "kids-tables-15",
+      "description": "Стильная и удобная детская кровать '15'. Идеально подходит для ежедневного отдыха.",
+      "seo": {
+        "title": "детская кровать  15 - купить в интернет-магазине",
+        "meta_description": "Купить детская кровать  '15' по выгодной цене. Отличное качество, доставка по всей РБ. Оформите заказ онлайн!",
+        "keywords": [
+          "детская кровать",
+          "купить детскую кровать",
+          "детская кровать купить",
+          "комфортная детская кровать",
+          "детская кровать в интернет-магазине",
+          "мягкая мебель",
+          "мебель для спальни",
+          "современная детская кровать",
+          "детская кровать с доставкой",
+          "недорогая детская кровать",
+          "стильная детская кровать",
+          "удобная детская кровать",
+          "детская кровать со скидкой",
+          "мебельный интернет-магазин",
+          "заказать детская кровать онлайн",
+          "качественная мягкая мебель"
+        ]
+      },
+      "images": [
+        "images/Sofa/Kids_tables/215/1.png"
+      ],
+      "price": {
+        "current": 1670,
+        "old": null,
+        "discount": null
+      },
+      "availability": "Под заказ",
+      "manufacturing": "До 35 рабочих дней",
+      "popularity": 4,
+      "kids-tables": [
+        {
+          "width": 90,
+          "length": 200,
+          "height": null,
+          "price": 1670,
+          "lifting_mechanism": [
+            {
+              "available": false,
+              "price": 0
+            },
+            {
+              "available": true,
+              "price": 120
+            }
+          ]
+        }
+      ],
+      "materials": [
+        {
+          "name": "Ткань",
+          "localizedTitles": {
+            "ru": "Ткань"
+          },
+          "type": "Все виды",
+          "color": null
+        },
+        {
+          "name": "Ортопедическое основание",
+          "localizedTitles": {
+            "ru": "Ортопедическое основание и опоры"
+          },
+          "type": "укреплённая металлическая рамка , берёзовые ламели, опоры-металл, пластик,дерево"
+        },
+        {
+          "name": "Каркас",
+          "localizedTitles": {
+            "ru": "Каркас"
+          },
+          "type": "массив, фанера, МДФ"
+        }
+      ],
+      "sleepingPlace": {
+        "width": null,
+        "length": null
+      },
+      "features": [
+        "механизм раскладывания: На выбор"
+      ],
+      "style": "Современный",
+      "color": null,
+      "max_load": null,
+      "country": "Беларусь",
+      "promotion": {
+        "type": null,
+        "text": null,
+        "valid_until": null
+      },
+      "warranty": "18 месяцев",
+      "delivery": {
+        "available": true,
+        "cost": "По Республике Беларусь - бесплатно",
+        "time": "2-5 дней"
+      },
+      "commercial-offer": "Изготавливаем крроватьы и кровати по индивидуальному заказу, по фото или картинке заказчика",
+      "installment_plans": [
+        {
+          "bank": "Альфа-Банк",
+          "installment": {
+            "duration_months": 4,
+            "interest": "0%",
+            "additional_fees": "Нет"
+          },
+          "credit": {
+            "duration_months": 36,
+            "interest": "По тарифам банка"
+          }
+        },
+        {
+          "bank": "БеларусБанк",
+          "installment": {
+            "duration_months": 6,
+            "interest": "0%",
+            "additional_fees": "Нет"
+          },
+          "credit": {
+            "duration_months": 24,
+            "interest": "По тарифам банка"
+          }
+        }
+      ]
+    }
+  ]

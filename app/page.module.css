@@ -1,0 +1,185 @@
+.benefits {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.sliderBenefits {
+    position: relative;
+    padding: 0;
+    overflow: hidden;
+    margin-top: 40px;
+    background-color: transparent;
+}
+
+.sliderBenefits__centerText {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    text-align: center;
+    pointer-events: none;
+    background-color: transparent;
+    padding: 0;
+    box-shadow: none;
+}
+
+.sliderBenefits__title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    height: 100%;
+    line-height: 1.2;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    vertical-align: middle;
+    color: #000002;
+    font-size: 16px;
+    line-height: 1;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    background-position: center center;
+    border-color: transparent;
+    border-style: solid;
+}
+
+.benefitsSliderContainer {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    margin: 0;
+}
+
+.benefitsSwiper {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+.benefitsItem {
+    overflow: hidden;
+    transition: all 0.5s ease;
+    box-shadow: none;
+    transform-origin: center;
+    opacity: 1;
+}
+
+.benefitsItem:hover {
+    opacity: 1;
+    transform: none;
+}
+
+.benefitsItem img {
+    width: 100%;
+    object-fit: cover;
+    transition: transform 0.7s ease;
+}
+
+.benefitsItem:hover img {
+    transform: none;
+}
+
+.benefitsItemLarge {
+    width: 280px;
+    height: 360px;
+}
+
+.benefitsItemMedium {
+    width: 240px;
+    height: 200px;
+}
+
+.benefitsItemSmall {
+    width: 180px;
+    height: 240px;
+}
+
+@media (max-width: 768px) {
+    .sliderBenefits {
+        height: 500px;
+    }
+
+    .sliderBenefits__title {
+        font-size: 20px;
+    }
+
+    .benefitsItemLarge {
+        width: 180px;
+        height: 240px;
+    }
+
+    .benefitsItemMedium {
+        width: 160px;
+        height: 140px;
+    }
+
+    .benefitsItemSmall {
+        width: 120px;
+        height: 160px;
+    }
+}
+
+.benefits {
+    margin-top: 40px;
+}
+
+.benefits__grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    padding: 10px;
+    background-color: #232323;
+    border-radius: 30px;
+}
+
+.benefitItem {
+    height: 310px;
+    background-color: #2b2b2b;
+    padding: 40px 30px;
+    color: #fff;
+    display: flex;
+    border-radius: 24px;
+    flex-direction: column;
+    justify-content: flex-end;
+    transition: background-color 0.3s ease;
+}
+
+.benefitItem:hover {
+    background-color: #333;
+}
+
+.benefitItem__title {
+    font-weight: 600;
+    font-size: 18.28px;
+    line-height: 22px;
+    letter-spacing: -0.5px;
+    vertical-align: middle;
+}
+
+.benefitItem__description {
+    color: #b7b7b7;
+    font-size: 14px;
+    margin-top: 12px;
+    font-weight: 600;
+    line-height: 20.8px;
+    word-wrap: break-word;
+}
+
+@media (max-width: 992px) {
+    .benefits__grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 576px) {
+    .benefits__grid {
+        grid-template-columns: 1fr;
+    }
+
+    .benefitItem {
+        padding: 30px 20px;
+    }
+}

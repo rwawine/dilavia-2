@@ -87,38 +87,30 @@ export async function getBedBySlug(slug: string): Promise<ProductData | null> {
 export async function getKidsBeds(): Promise<KidsBedData[]> {
   try {
     // Fetch kids beds data
-    const rawData = await fetchWithErrorHandling<any[]>(`${API_BASE_URL}/kids`, "Failed to fetch kids beds")
+    const data = await fetchWithErrorHandling<any[]>(`${API_BASE_URL}/kids`, "Failed to fetch kids beds")
 
     // Check if the data is an array
-    if (!Array.isArray(rawData) || rawData.length === 0 || !Array.isArray(rawData[0])) {
-      console.error("Unexpected data format for kids beds:", rawData)
+    if (!Array.isArray(data)) {
+      console.error("Unexpected data format for kids beds:", data)
       return []
     }
 
-    // The data structure is an array containing another array with alternating product/specs objects
-    const kidsBedsArray = rawData[0]
-    const processedKidsBeds: KidsBedData[] = []
-
-    // Process the data to extract product information
-    for (let i = 0; i < kidsBedsArray.length; i += 2) {
-      if (i + 1 < kidsBedsArray.length) {
-        const productInfo = kidsBedsArray[i]
-        const productSpecs = kidsBedsArray[i + 1]
-
-        // Create a normalized product object
-        const kidsBed: KidsBedData = {
-          ...productInfo,
-          specs: productSpecs,
-          // Ensure the product has the required fields for our app
-          category: "kids",
-          popularity: productInfo.popularity || 4,
-        }
-
-        processedKidsBeds.push(kidsBed)
+    // Process each product
+    return data.map(product => ({
+      ...product,
+      category: "kids-tables",
+      specs: {
+        "kids-tables": product["kids-tables"] || [],
+        materials: product.materials || [],
+        features: product.features || [],
+        style: product.style,
+        color: product.color,
+        country: product.country,
+        warranty: product.warranty,
+        delivery: product.delivery,
+        installment_plans: product.installment_plans
       }
-    }
-
-    return processedKidsBeds
+    }))
   } catch (error) {
     console.error("Error in getKidsBeds:", error)
     return []

@@ -28,7 +28,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     product = await getBedBySlug(slug)
   } else if (category === "armchair") {
     product = await getArmchairBySlug(slug)
-  } else if (category === "kids") {
+  } else if (category === "kids-tables") {
     product = await getKidsBedBySlug(slug)
   }
 

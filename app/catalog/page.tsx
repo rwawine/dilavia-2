@@ -10,7 +10,7 @@ import { getProductsByFilters, getPriceRange, getSortedProducts, getAvailableFil
 import type { ProductData } from "@/shared/api/types"
 import styles from "./page.module.css"
 
-const PAGE_SIZE = 16
+const PAGE_SIZE = 1000
 
 export default function CatalogPage() {
   const searchParams = useSearchParams()

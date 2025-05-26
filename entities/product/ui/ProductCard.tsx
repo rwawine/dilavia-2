@@ -32,7 +32,7 @@ export default function ProductCard({ product, showOptions = false, className = 
   const sizes = useMemo(() => {
     const isSofa = product.category === "sofa"
     const isBed = product.category === "bed"
-    const isKidsBed = product.category === "kids"
+    const isKidsBed = product.category === "kids-tables"
 
     if (isBed && "bed" in product && Array.isArray((product as BedData).bed)) {
       return ((product as BedData).bed as Size[]).map((size) => ({
@@ -71,7 +71,7 @@ export default function ProductCard({ product, showOptions = false, className = 
   // Memoize lifting mechanism check
   const hasLiftingMechanism = useCallback(() => {
     const isBed = product.category === "bed"
-    const isKidsBed = product.category === "kids"
+    const isKidsBed = product.category === "kids-tables"
 
     if (
       isBed &&
@@ -124,16 +124,14 @@ export default function ProductCard({ product, showOptions = false, className = 
     }
 
     if (
-      product.category === "kids" &&
+      product.category === "kids-tables" &&
       withMechanism &&
       hasLiftingMechanism() &&
-      "specs" in product &&
-      (product as KidsBedData).specs &&
-      Array.isArray((product as KidsBedData).specs!["kids-tables"]) &&
-      (product as KidsBedData).specs!["kids-tables"]![selectedSize] &&
-      Array.isArray((product as any).specs["kids-tables"][selectedSize].lifting_mechanism)
+      "kids-tables" in product &&
+      Array.isArray((product as any)["kids-tables"][selectedSize].lifting_mechanism) &&
+      (product as any)["kids-tables"][selectedSize].lifting_mechanism[1]
     ) {
-      totalPrice += (product as any).specs["kids-tables"][selectedSize].lifting_mechanism[1].price
+      totalPrice += (product as any)["kids-tables"][selectedSize].lifting_mechanism[1].price
     }
 
     return totalPrice
